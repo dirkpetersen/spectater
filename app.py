@@ -19,8 +19,6 @@ from datetime import datetime, timezone, timedelta
 import tempfile
 import dotenv
 
-from config import *
-
 # Load environment variables
 dotenv.load_dotenv()
 
@@ -35,19 +33,19 @@ debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
 app = Flask(__name__, static_url_path='/static', static_folder='static') # or app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour session
-# app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH ???
+app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', 16777216))
 
 
 def get_bedrock_client():
     """Initialize Bedrock client with local credentials and retry configuration"""
     try:
         session = boto3.Session()
-        region = session.region_name or BEDROCK_REGION
+        region = session.region_name or os.getenv('BEDROCK_REGION', 'us-west-2')
         
         # Configure retry behavior
         retry_config = Config(
             retries={
-                "max_attempts": MAX_RETRIES,
+                "max_attempts": int(os.getenv('MAX_RETRIES', 10)),
                 "mode": "standard",
             }
         )
@@ -69,14 +67,14 @@ bedrock = get_bedrock_client()
 
 def get_user_id():
     """Get or create user ID from cookie"""
-    user_id = request.cookies.get(COOKIE_NAME)
+    user_id = request.cookies.get(os.getenv('COOKIE_NAME', 'user_id'))
     if not user_id:
         user_id = str(uuid.uuid4())
     return user_id
 
 def get_policy_cache_path(user_id: str) -> Path:
     """Get path to user's cached policy file"""
-    return Path(CACHE_DIR) / f"policy_{user_id}.txt"
+    return Path(os.getenv('CACHE_DIR', 'policy_cache')) / f"policy_{user_id}.txt"
 
 def save_policy_to_cache(text: str, user_id: str):
     """Save policy text to user-specific cache"""
@@ -167,9 +165,9 @@ RED means one or more requirements are clearly not met.
 
     try:
         request_body = {
-            "anthropic_version": ANTHROPIC_VERSION,
-            "max_tokens": MAX_TOKENS,
-            "temperature": TEMPERATURE,
+            "anthropic_version": os.getenv('ANTHROPIC_VERSION', 'bedrock-2023-05-31'),
+            "max_tokens": int(os.getenv('MAX_TOKENS', 100000)),
+            "temperature": float(os.getenv('TEMPERATURE', 0.7)),
             "messages": [
                 {
                     "role": "user",
@@ -180,7 +178,7 @@ RED means one or more requirements are clearly not met.
         logger.debug(f"Bedrock request body: {json.dumps(request_body, indent=2)}")
         
         response = bedrock.invoke_model(
-            modelId=MODEL_ID,
+            modelId=os.getenv('MODEL_ID', 'anthropic.claude-3-5-haiku-20241022-v1:0'),
             body=json.dumps(request_body)
         )
         
@@ -262,7 +260,7 @@ def index():
             response = make_response(render_template('index.html', 
                                                    result=result, 
                                                    explanation=explanation))
-            expires = datetime.now(timezone.utc) + timedelta(seconds=COOKIE_MAX_AGE)
+            expires = datetime.now(timezone.utc) + timedelta(seconds=int(os.getenv('COOKIE_MAX_AGE', 2592000)))
             response.set_cookie(COOKIE_NAME, user_id, expires=expires)
             return response
             
