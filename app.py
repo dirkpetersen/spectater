@@ -1,23 +1,14 @@
+#! /usr/bin/env python3
 
-#! /usr/bin/env/python3
-
-from flask import Flask, render_template, request, make_response
-import uuid
-import boto3
-import markitdown
-import io
-import os
-import json
-import logging
-import hashlib
+import uuid, os, tempfile, logging, json, pathlib
+from datetime import datetime, timezone, timedelta
 from typing import Tuple, List, Optional
-from pathlib import Path
-from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, make_response
 from botocore.exceptions import BotoCoreError, ClientError
 from botocore.config import Config
-from datetime import datetime, timezone, timedelta
-import tempfile
+import boto3
 import dotenv
+import markitdown
 
 # Load environment variables
 dotenv.load_dotenv()
@@ -26,7 +17,8 @@ dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
 def configure_logging():
     log_level = logging.DEBUG if app.debug else logging.INFO
-    logging.basicConfig(level=log_level, format=os.getenv('LOG_FORMAT', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logging.basicConfig(level=log_level, 
+            format=os.getenv('LOG_FORMAT', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
 
 debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
@@ -72,9 +64,9 @@ def get_user_id():
         user_id = str(uuid.uuid4())
     return user_id
 
-def get_policy_cache_path(user_id: str) -> Path:
+def get_policy_cache_path(user_id: str) -> pathlib.Path:
     """Get path to user's cached policy file"""
-    return Path(os.getenv('CACHE_DIR', 'policy_cache')) / f"policy_{user_id}.txt"
+    return pathlib.Path(os.getenv('CACHE_DIR', 'policy_cache')) / f"policy_{user_id}.txt"
 
 def save_policy_to_cache(text: str, user_id: str):
     """Save policy text to user-specific cache"""
@@ -134,7 +126,8 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
         ValueError: If response parsing fails
     """
     # Create simple analysis prompt with full documents
-    analysis_prompt = f"""Human: Compare these two documents and determine if the second document meets the requirements specified in the first document.
+    analysis_prompt = f"""Human: Compare these two documents and determine if the 
+    submission document meets the requirements specified in the policy document,
 
 Policy Document:
 {policy_text}
@@ -152,17 +145,6 @@ RED means one or more requirements are clearly not met.
 
 """ 
     
-#GREEN means all requirements (quantifiable/numerical and unquantifiable) are fully met 
-#YELLOW means all quantifiable/numerical requirements are met but other requirements are ambiguous.
-#ORANGE means both numerical and other requirements are ambiguous and need clarification.
-#RED means one or more requirements are clearly not met.
-#
-
-#GREEN means all requirements (quantifiable/numerical and unquantifiable) are fully met 
-#YELLOW means that you are not sure if the requirements are met or not.
-#RED means one or more requirements are clearly not met.
-
-
     try:
         request_body = {
             "anthropic_version": os.getenv('ANTHROPIC_VERSION', 'bedrock-2023-05-31'),
