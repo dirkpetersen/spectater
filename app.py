@@ -214,18 +214,30 @@ def index():
         try:
             user_id = get_user_id()
             
-            # Handle policy document
-            if policy_file and policy_file.filename:
-                policy_text = extract_text_from_file(policy_file)
-                save_policy_to_cache(policy_text, user_id)
+            # Handle multiple policy files
+            policy_text = ""
+            if policy_files := request.files.getlist('policy'):
+                for file in policy_files:
+                    if file.filename:  # Skip empty files
+                        policy_text += "\n" + extract_text_from_file(file)
+                if policy_text:
+                    save_policy_to_cache(policy_text.strip(), user_id)
+                else:
+                    # Try to load cached policy
+                    policy_text = get_cached_policy(user_id)
+                    if not policy_text:
+                        return render_template('index.html', error="No policy document available. Please upload one.")
+                    logger.debug("Using cached policy document")
+
+            # Handle multiple submission files
+            submission_text = ""
+            if submission_files := request.files.getlist('submission'):
+                for file in submission_files:
+                    if file.filename:
+                        submission_text += "\n" + extract_text_from_file(file)
             else:
-                # Try to load cached policy
-                policy_text = get_cached_policy(user_id)
-                if not policy_text:
-                    return render_template('index.html', error="No policy document available. Please upload one.")
-                logger.debug("Using cached policy document")
-            
-            submission_text = extract_text_from_file(submission_file)
+                return render_template('index.html', error="At least one submission document is required")
+            submission_text = submission_text.strip()
             
             result, explanation = evaluate_requirements(policy_text, submission_text)
             logger.info(f"Evaluation result: {result}, Explanation: {explanation}")
