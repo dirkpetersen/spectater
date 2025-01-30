@@ -30,14 +30,14 @@
         
         <form method="POST" enctype="multipart/form-data">
             <div class="mb-3">
-                <label for="policy" class="form-label">Policy / Requirements Document (use <a href="https://pdfmerge.com" target="_blank">pdfmerge.com</a> for multiple docs)</label>
-                <input type="file" class="form-control" id="policy" name="policy">
+                <label for="policy" class="form-label">Policy Documents (multiple allowed)</label>
+                <input type="file" class="form-control" id="policy" name="policy" multiple>
                 <small class="form-text text-muted" id="policyHelp">Previously uploaded files will use cached analysis</small>
             </div>
             
             <div class="mb-3">
-                <label for="submission" class="form-label">Submission Document</label>
-                <input type="file" class="form-control" id="submission" name="submission" required>
+                <label for="submission" class="form-label">Submission Documents (multiple allowed)</label>
+                <input type="file" class="form-control" id="submission" name="submission" required multiple>
                 <small class="form-text text-muted" id="submissionHelp">Previously uploaded files will use cached analysis</small>
             </div>
             
@@ -94,12 +94,9 @@
         function handleFileSelect(input, storageKey) {
             input.addEventListener('change', function() {
                 if (this.files.length > 0) {
-                    const file = this.files[0];
-                    localStorage.setItem(storageKey + '_name', file.name);
-                    // Store file metadata
-                    localStorage.setItem(storageKey + '_lastModified', file.lastModified);
-                    localStorage.setItem(storageKey + '_size', file.size);
-                    localStorage.setItem(storageKey + '_type', file.type);
+                    const files = Array.from(this.files);
+                    localStorage.setItem(storageKey + '_names', 
+                        JSON.stringify(files.map(file => file.name)));
                 }
             });
         }
@@ -129,10 +126,10 @@
 
         // Update file input display
         function updateFileDisplay(input, storageKey) {
-            const fileName = localStorage.getItem(storageKey + '_name');
-            if (fileName) {
+            const fileNames = JSON.parse(localStorage.getItem(storageKey + '_names') || '[]');
+            if (fileNames.length) {
                 const helpText = input.nextElementSibling;
-                helpText.innerHTML = `Previously uploaded: <strong>${fileName}</strong>`;
+                helpText.innerHTML = `Uploaded: ${fileNames.join(', ')}`;
                 helpText.classList.add('text-primary');
             }
         }
@@ -149,13 +146,11 @@
                 event.preventDefault();
                 return;
             }
-            ['name', 'lastModified', 'size', 'type'].forEach(key => 
-                localStorage.removeItem('policy_' + key));
+            localStorage.removeItem('policy_names');
         });
 
         submissionInput.addEventListener('click', function() {
-            ['name', 'lastModified', 'size', 'type'].forEach(key => 
-                localStorage.removeItem('submission_' + key));
+            localStorage.removeItem('submission_names');
         });
     </script>
 </body>
