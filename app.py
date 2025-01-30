@@ -26,7 +26,7 @@ dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
 def configure_logging():
     log_level = logging.DEBUG if app.debug else logging.INFO
-    logging.basicConfig(level=log_level, format=LOG_FORMAT)
+    logging.basicConfig(level=log_level, format=os.getenv('LOG_FORMAT', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
 
 debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
@@ -78,7 +78,7 @@ def get_policy_cache_path(user_id: str) -> Path:
 
 def save_policy_to_cache(text: str, user_id: str):
     """Save policy text to user-specific cache"""
-    os.makedirs(CACHE_DIR, exist_ok=True)
+    os.makedirs(os.getenv('CACHE_DIR', 'policy_cache'), exist_ok=True)
     cache_path = get_policy_cache_path(user_id)
     cache_path.write_text(text)
     logger.debug(f"Saved policy to cache: {cache_path}")
@@ -260,8 +260,8 @@ def index():
             response = make_response(render_template('index.html', 
                                                    result=result, 
                                                    explanation=explanation))
-            expires = datetime.now(timezone.utc) + timedelta(seconds=int(os.getenv('COOKIE_MAX_AGE', 2592000)))
-            response.set_cookie(COOKIE_NAME, user_id, expires=expires)
+            expires = datetime.now(timezone.utc) + timedelta(seconds=int(os.getenv('COOKIE_MAX_AGE', '2592000')))
+            response.set_cookie(os.getenv('COOKIE_NAME', 'user_id'), user_id, expires=expires)
             return response
             
         except Exception as e:
