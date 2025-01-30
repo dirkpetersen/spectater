@@ -30,14 +30,14 @@
         
         <form method="POST" enctype="multipart/form-data">
             <div class="mb-3">
-                <label for="policy" class="form-label">Policy / Requirements Document (PDF - use <a href="https://pdfmerge.com" target="_blank">pdfmerge.com</a> for multiple docs)</label>
-                <input type="file" class="form-control" id="policy" name="policy" accept=".pdf">
+                <label for="policy" class="form-label">Policy / Requirements Document (use <a href="https://pdfmerge.com" target="_blank">pdfmerge.com</a> for multiple docs)</label>
+                <input type="file" class="form-control" id="policy" name="policy">
                 <small class="form-text text-muted" id="policyHelp">Previously uploaded files will use cached analysis</small>
             </div>
             
             <div class="mb-3">
-                <label for="submission" class="form-label">Submission Document (PDF)</label>
-                <input type="file" class="form-control" id="submission" name="submission" accept=".pdf" required>
+                <label for="submission" class="form-label">Submission Document</label>
+                <input type="file" class="form-control" id="submission" name="submission" required>
                 <small class="form-text text-muted" id="submissionHelp">Previously uploaded files will use cached analysis</small>
             </div>
             
