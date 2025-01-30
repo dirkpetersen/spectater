@@ -83,30 +83,22 @@ def get_cached_policy(user_id: str) -> Optional[str]:
         return cache_path.read_text()
     return None
 
-def extract_text_from_pdf(pdf_file) -> str:
-    """
-    Extract text content from a PDF file using MarkItDown.
-    
-    Args:
-        pdf_file: File object containing PDF data
-        
-    Returns:
-        str: Extracted text from the PDF in markdown format
-        
-    Raises:
-        Exception: If PDF parsing fails
-    """
-    
-    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_file:
-        pdf_file.save(temp_file.name)
-        temp_path = temp_file.name
-    
+def extract_text_from_file(uploaded_file) -> str:
+    """Extract text from any supported file format using MarkItDown"""
     try:
+        # Preserve original file extension
+        file_ext = pathlib.Path(uploaded_file.filename).suffix
+        with tempfile.NamedTemporaryFile(suffix=file_ext, delete=False) as temp_file:
+            uploaded_file.save(temp_file.name)
+            temp_path = temp_file.name
+
         md = markitdown.MarkItDown()
         result = md.convert(temp_path)
         return result.text_content
+    except Exception as e:
+        logger.error(f"Failed to process {uploaded_file.filename}: {str(e)}")
+        raise ValueError(f"Unsupported file format or corrupt file: {uploaded_file.filename}")
     finally:
-        # Clean up temporary file
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
@@ -224,7 +216,7 @@ def index():
             
             # Handle policy document
             if policy_file and policy_file.filename:
-                policy_text = extract_text_from_pdf(policy_file)
+                policy_text = extract_text_from_file(policy_file)
                 save_policy_to_cache(policy_text, user_id)
             else:
                 # Try to load cached policy
@@ -233,7 +225,7 @@ def index():
                     return render_template('index.html', error="No policy document available. Please upload one.")
                 logger.debug("Using cached policy document")
             
-            submission_text = extract_text_from_pdf(submission_file)
+            submission_text = extract_text_from_file(submission_file)
             
             result, explanation = evaluate_requirements(policy_text, submission_text)
             logger.info(f"Evaluation result: {result}, Explanation: {explanation}")
