@@ -21,18 +21,18 @@ def configure_logging():
             format=os.getenv('LOG_FORMAT', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
 
-debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+debug_mode = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
 app = Flask(__name__, static_url_path='/static', static_folder='static') # or app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour session
-app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', 16777216))
+app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', 134217728))
 
 
 def get_bedrock_client():
     """Initialize Bedrock client with local credentials and retry configuration"""
     try:
         session = boto3.Session()
-        region = session.region_name or os.getenv('BEDROCK_REGION', 'us-west-2')
+        region = session.region_name or os.getenv('AWS_REGION', 'us-west-2')
         
         # Configure retry behavior
         retry_config = Config(
@@ -132,7 +132,7 @@ In addition provide an explanation on how specific requirements are met (GREEN) 
 
 GREEN means all requirements (quantifiable/numerical and unquantifiable) are fully met 
 YELLOW means all quantifiable/numerical requirements are met but other requirements are ambiguous.
-ORANGE means both numerical and other requirements are ambiguous and need clarification.
+ORANGE means both numerical and other requirements are ambiguous or not applicable at all
 RED means one or more requirements are clearly not met.
 
 """ 
