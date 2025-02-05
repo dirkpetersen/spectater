@@ -84,24 +84,25 @@ def get_cached_policy(user_id: str) -> Optional[str]:
     return None
 
 def _html_table_to_md(match):
-    """Convert HTML table to pipe-marked MD table with alignment"""
+    """Convert HTML tables to markdown with alignment detection"""
     table_html = match.group(0)
+    table = pymupdf4llm.Table(table_html)
     
-    # Use PyMuPDF's table parser for accurate conversion
-    table = pymupdf4llm.get_table(table_html)
+    # Build header separator with alignment
+    alignments = ["---"] * len(table.headers)
+    for i, col in enumerate(table.columns):
+        if col.alignment == pymupdf4llm.Alignment.CENTER:
+            alignments[i] = ":---:"
+        elif col.alignment == pymupdf4llm.Alignment.RIGHT:
+            alignments[i] = "---:"
     
-    # Build Markdown table with headers
-    md_table = []
-    for i, row in enumerate(table.rows):
-        cells = [cell.text.replace('\n', ' ') for cell in row.cells]
-        
-        if i == 0 and table.header.row_count > 0:
-            md_table.append("| " + " | ".join(cells) + " |")
-            md_table.append("| " + " | ".join(["-" * len(c) for c in cells]) + " |")
-        else:
-            md_table.append("| " + " | ".join(cells) + " |")
-
-    return "\n" + "\n".join(md_table) + "\n"
+    # Build pipe-formatted table
+    rows = ["|".join(table.headers)]
+    rows.append("|".join(alignments))
+    for row in table.rows:
+        rows.append("|".join(cell.text.replace('\n', ' ') for cell in row))
+    
+    return "\n\n" + "|\n".join(rows) + "\n\n"
 
 def extract_text_from_file(uploaded_file) -> str:
     """Extract text with precise table preservation using PyMuPDF4LLM"""
@@ -113,11 +114,8 @@ def extract_text_from_file(uploaded_file) -> str:
             
             # Process document with explicit table handling
             markdown_text = pymupdf4llm.to_markdown(
-                temp_path,
-                tables=True,  # Enable table parsing
-                table_format="html",  # Get original table HTML structure
-                images=False,  # Disable image processing
-                ocr=False  # Disable OCR
+                file_path=temp_path,
+                flags=pymupdf4llm.Flags.MARKED_CONTENT  # New flag format for table detection
             )
             
             # Convert HTML tables to Markdown tables
