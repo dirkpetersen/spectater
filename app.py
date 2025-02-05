@@ -163,20 +163,13 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
         BotoCoreError: If AWS Bedrock API call fails
         ValueError: If response parsing fails
     """
-    # Create simple analysis prompt with full documents
-    analysis_prompt = f"""Human: Carefully analyze these technical documents. 
-    Start your response with GREEN if the submission documents meets the requirements of the policy 
-    document and start your response with RED if one or more requirements are not met. Please pay 
-    special attention to numerical requirements that may be stored in tables. If a single numerical 
-    requirement is not met or exceeded, the reponse must always start with RED.   
-
-Policy Document:
-{policy_text}
-
-Submission Document:
-{submission_text}
-
-""" 
+    # Read prompt template from file
+    prompt_path = pathlib.Path(__file__).parent / "analysis-prompt.txt"
+    with open(prompt_path, 'r') as f:
+        analysis_prompt = f.read().format(
+            policy_text=policy_text,
+            submission_text=submission_text
+        )
 
     try:
         request_body = {
