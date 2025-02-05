@@ -105,28 +105,34 @@ def _html_table_to_md(match):
     return "\n\n" + "|\n".join(rows) + "\n\n"
 
 def extract_text_from_file(uploaded_file) -> str:
-    """Extract text with precise table preservation using PyMuPDF4LLM"""
+    """Extract text with table preservation using validated parameters"""
     try:
         filename = uploaded_file.filename
         with tempfile.NamedTemporaryFile(suffix=pathlib.Path(filename).suffix, delete=False) as tmp:
             uploaded_file.save(tmp.name)
             temp_path = tmp.name
             
-            # Process document with explicit table handling
+            # Process with validated table parameters
             markdown_text = pymupdf4llm.to_markdown(
-                file=temp_path,       # Correct parameter name for input file
-                html_tables=True      # Enable raw HTML table output
+                doc=temp_path,  # Correct parameter name per docs
+                table_strategy="lines_strict",  # Explicit table detection
+                graphics_limit=10000,  # Handle complex technical docs
+                write_images=False,  # Disable image processing
+                force_text=True,  # Ensure text overlaps are preserved
+                margins=0,  # Process full page content
+                image_size_limit=0,  # Include all graphics as text
+                extract_words=False  # Disable word coordinates
             )
             
-            # Convert HTML tables to Markdown tables
+            # Enhanced table pattern match
             markdown_text = re.sub(
-                r'<table[\s\S]*?</table>',  # More robust pattern
+                r'<table\b[^>]*>.*?</table>',  # More precise HTML table matching
                 _html_table_to_md,
                 markdown_text,
-                flags=re.DOTALL
+                flags=re.DOTALL|re.IGNORECASE
             )
             
-            logger.debug(f"Extracted structured text with tables from {filename}")
+            logger.debug(f"Extracted structured text from {filename}")
             return markdown_text
             
     except Exception as e:
