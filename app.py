@@ -171,10 +171,6 @@ Submission Document:
 {submission_text}
 
 """ 
-  
-    old = """    If all numerical / quantifyable requirements are met and some non-numerical requirements are not 
-    addressed where they should, please start your reponse with YELLOW. 
-    """
 
     try:
         request_body = {
