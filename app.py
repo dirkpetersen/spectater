@@ -8,7 +8,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from botocore.config import Config
 import boto3
 import dotenv
-import markitdown
+import pymupdf4llm
 
 # Load environment variables
 dotenv.load_dotenv()
@@ -84,17 +84,17 @@ def get_cached_policy(user_id: str) -> Optional[str]:
     return None
 
 def extract_text_from_file(uploaded_file) -> str:
-    """Extract text from any supported file format using MarkItDown"""
+    """Extract structured text from PDF and Office docs using PyMuPDF4LLM"""
     try:
-        # Preserve original file extension
         file_ext = pathlib.Path(uploaded_file.filename).suffix
         with tempfile.NamedTemporaryFile(suffix=file_ext, delete=False) as temp_file:
             uploaded_file.save(temp_file.name)
             temp_path = temp_file.name
-
-        md = markitdown.MarkItDown()
-        result = md.convert(temp_path)
-        return result.text_content
+        
+        # Process document with layout-aware extraction
+        md_text = pymupdf4llm.to_markdown(temp_path)
+        logger.debug(f"Extracted structured text from {uploaded_file.filename}")
+        return md_text
     except Exception as e:
         logger.error(f"Failed to process {uploaded_file.filename}: {str(e)}")
         raise ValueError(f"Unsupported file format or corrupt file: {uploaded_file.filename}")
