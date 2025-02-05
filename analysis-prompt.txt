@@ -1,13 +1,22 @@
-Human: Carefully analyze these technical documents. 
-Start your response with GREEN if the submission documents meet the 
-requirements of the policy document and start your response with RED 
-if one or more requirements are not met. 
-Please pay special attention to numerical requirements that may be 
-stored in tables. If a single numerical requirement is not met or 
-exceeded, the reponse must always start with RED.   
+Human: Review all technical documents (Submission Document) against 
+policy requirements (Policy Document).
+
+Compare all requirements, especially numerical values in tables
+Numerical values must meet requirements but can exceed them
+A single unmet minimum requirement or a numeric value falls that falls
+it short means automatic failure.
+
+Format response:
+Start the response with "GREEN" if ALL requirements are fully met
+Start the response with "RED" in case of failure or if ANY 
+minimum requirement is not met or a numerical value falls short.
+
+if you are unsure, the response must start with RED.
+
 
 Policy Document:
 {policy_text}
 
 Submission Document:
 {submission_text}
+
