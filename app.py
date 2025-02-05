@@ -114,12 +114,15 @@ def extract_text_from_file(uploaded_file) -> str:
             # Process document with explicit table handling
             markdown_text = pymupdf4llm.to_markdown(
                 temp_path,
-                flags=pymupdf4llm.AnalyzerFlags.TABLES_HTML  # Get raw table HTML
+                tables=True,  # Enable table parsing
+                table_format="html",  # Get original table HTML structure
+                images=False,  # Disable image processing
+                ocr=False  # Disable OCR
             )
             
             # Convert HTML tables to Markdown tables
             markdown_text = re.sub(
-                r'<table.*?</table>',
+                r'<table[\s\S]*?</table>',  # More robust pattern
                 _html_table_to_md,
                 markdown_text,
                 flags=re.DOTALL
