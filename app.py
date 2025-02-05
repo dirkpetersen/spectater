@@ -162,7 +162,7 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
     Start your response with GREEN if the submission documents meets the requirements of the policy 
     document and start your response with RED if one or more requirements are not met. Please pay 
     special attention to numerical requirements that may be stored in tables. If a single numerical 
-    requirement is not met, the reponse must always start with RED.
+    requirement is not met or exceeded, the reponse must always start with RED.   
 
 Policy Document:
 {policy_text}
@@ -171,41 +171,16 @@ Submission Document:
 {submission_text}
 
 """ 
-    old = """
+  
+    old = """    If all numerical / quantifyable requirements are met and some non-numerical requirements are not 
+    addressed where they should, please start your reponse with YELLOW. 
+    """
 
-1. **Table Comparison** - Verify these table metrics match exactly:
-   - Table row counts
-   - Column headers and order
-   - Numeric values in key columns
-   - Units of measurement
-
-2. **Structural Integrity**:
-   - Document hierarchy preservation
-   - Section numbering consistency
-   - Cross-references between sections
-
-3. **Numerical Accuracy**:
-   - Tolerance thresholds (±1% for GREEN, ±5% for YELLOW)
-   - Statistical significance markers
-   - Measurement standards cited
-
-   
-Respond STRICTLY using this format:
-STATUS: [COLOR]
-TABLE_ISSUES: [Count/Tables with page numbers]
-NUMERICAL_DEVIATIONS: [>1% differences with page refs]
-SECTION_DEVIATIONS: [Missing/changed sections]
-
-"""
-
-
-
-    
     try:
         request_body = {
             "anthropic_version": os.getenv('ANTHROPIC_VERSION', 'bedrock-2023-05-31'),
             "max_tokens": int(os.getenv('MAX_TOKENS', 100000)),
-            "temperature": float(os.getenv('TEMPERATURE', 0.7)),
+            "temperature": float(os.getenv('TEMPERATURE', 1.0)),
             "messages": [
                 {
                     "role": "user",

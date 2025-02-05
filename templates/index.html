@@ -52,7 +52,7 @@
         {% if result %}
         <div class="result-box {{ result.lower() }}">
             {% if result == "GREEN" %}
-                {{ result }}: all requirements (quantifiable/numerical and unquantifiable) are fully met
+                {{ result }}: all requirements are fully met
             {% elif result == "YELLOW" %}
                 {{ result }}: all quantifiable/numerical requirements are met but other requirements are ambiguous
             {% elif result == "ORANGE" %}
