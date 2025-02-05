@@ -57,6 +57,12 @@ def get_bedrock_client():
 # Initialize Bedrock client
 bedrock = get_bedrock_client()
 
+def validate_pdf_file(file) -> None:
+    """Validate uploaded file is a PDF"""
+    filename = file.filename
+    if not filename.lower().endswith('.pdf'):
+        raise ValueError(f"Invalid file type: {filename}. Only PDF files are allowed.")
+
 def get_user_id():
     """Get or create user ID from cookie"""
     user_id = request.cookies.get(os.getenv('COOKIE_NAME', 'user_id'))
@@ -247,6 +253,15 @@ def index():
         policy_file = request.files.get('policy')
         
         try:
+            # Validate all policy files
+            for file in request.files.getlist('policy'):
+                if file.filename:  # Skip empty files
+                    validate_pdf_file(file)
+            
+            # Validate all submission files
+            for file in request.files.getlist('submission'):
+                validate_pdf_file(file)
+
             user_id = get_user_id()
             
             # Handle multiple policy files
