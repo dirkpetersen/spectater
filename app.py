@@ -158,7 +158,20 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
         ValueError: If response parsing fails
     """
     # Create simple analysis prompt with full documents
-    analysis_prompt = f"""Human: Carefully analyze these technical documents. Key focuses:
+    analysis_prompt = f"""Human: Carefully analyze these technical documents. 
+    Start your response with GREEN if the submission documents meets the requirements of the policy 
+    document and start your response with RED if one or more requirements are not met. Please pay 
+    special attention to numerical requirements that may be stored in tables. If a single numerical 
+    requirement is not met, the reponse must always start with RED.
+
+Policy Document:
+{policy_text}
+
+Submission Document:
+{submission_text}
+
+""" 
+    old = """
 
 1. **Table Comparison** - Verify these table metrics match exactly:
    - Table row counts
@@ -176,19 +189,17 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
    - Statistical significance markers
    - Measurement standards cited
 
-Policy Document:
-{policy_text}
-
-Submission Document:
-{submission_text}
-
+   
 Respond STRICTLY using this format:
 STATUS: [COLOR]
 TABLE_ISSUES: [Count/Tables with page numbers]
 NUMERICAL_DEVIATIONS: [>1% differences with page refs]
 SECTION_DEVIATIONS: [Missing/changed sections]
 
-""" 
+"""
+
+
+
     
     try:
         request_body = {
