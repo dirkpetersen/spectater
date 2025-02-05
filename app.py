@@ -115,7 +115,9 @@ def extract_text_from_file(uploaded_file) -> str:
             # Process document with explicit table handling
             markdown_text = pymupdf4llm.to_markdown(
                 file_path=temp_path,
-                flags=pymupdf4llm.Flags.MARKED_CONTENT  # New flag format for table detection
+                tables=True,          # Explicitly enable table detection
+                table_format="html",  # Get raw HTML tables from parser
+                keep_html=True        # Wait to convert HTML→MD ourselves later
             )
             
             # Convert HTML tables to Markdown tables
