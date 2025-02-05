@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-import uuid, os, tempfile, logging, json, pathlib
+import uuid, os, tempfile, logging, json, pathlib, re
 from datetime import datetime, timezone, timedelta
 from typing import Tuple, List, Optional
 from flask import Flask, render_template, request, make_response
@@ -83,21 +83,54 @@ def get_cached_policy(user_id: str) -> Optional[str]:
         return cache_path.read_text()
     return None
 
-def extract_text_from_file(uploaded_file) -> str:
-    """Extract structured text from PDF and Office docs using PyMuPDF4LLM"""
-    try:
-        file_ext = pathlib.Path(uploaded_file.filename).suffix
-        with tempfile.NamedTemporaryFile(suffix=file_ext, delete=False) as temp_file:
-            uploaded_file.save(temp_file.name)
-            temp_path = temp_file.name
+def _html_table_to_md(match):
+    """Convert HTML table to pipe-marked MD table with alignment"""
+    table_html = match.group(0)
+    
+    # Use PyMuPDF's table parser for accurate conversion
+    table = pymupdf4llm.get_table(table_html)
+    
+    # Build Markdown table with headers
+    md_table = []
+    for i, row in enumerate(table.rows):
+        cells = [cell.text.replace('\n', ' ') for cell in row.cells]
         
-        # Process document with layout-aware extraction
-        md_text = pymupdf4llm.to_markdown(temp_path)
-        logger.debug(f"Extracted structured text from {uploaded_file.filename}")
-        return md_text
+        if i == 0 and table.header.row_count > 0:
+            md_table.append("| " + " | ".join(cells) + " |")
+            md_table.append("| " + " | ".join(["-" * len(c) for c in cells]) + " |")
+        else:
+            md_table.append("| " + " | ".join(cells) + " |")
+
+    return "\n" + "\n".join(md_table) + "\n"
+
+def extract_text_from_file(uploaded_file) -> str:
+    """Extract text with precise table preservation using PyMuPDF4LLM"""
+    try:
+        filename = uploaded_file.filename
+        with tempfile.NamedTemporaryFile(suffix=pathlib.Path(filename).suffix, delete=False) as tmp:
+            uploaded_file.save(tmp.name)
+            temp_path = tmp.name
+            
+            # Process document with explicit table handling
+            markdown_text = pymupdf4llm.to_markdown(
+                temp_path,
+                flags=pymupdf4llm.AnalyzerFlags.TABLES_HTML  # Get raw table HTML
+            )
+            
+            # Convert HTML tables to Markdown tables
+            markdown_text = re.sub(
+                r'<table.*?</table>',
+                _html_table_to_md,
+                markdown_text,
+                flags=re.DOTALL
+            )
+            
+            logger.debug(f"Extracted structured text with tables from {filename}")
+            return markdown_text
+            
     except Exception as e:
-        logger.error(f"Failed to process {uploaded_file.filename}: {str(e)}")
-        raise ValueError(f"Unsupported file format or corrupt file: {uploaded_file.filename}")
+        logger.error(f"Processing failed for {filename}: {str(e)}")
+        raise ValueError(f"Document processing error: {e}")
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
@@ -118,8 +151,23 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
         ValueError: If response parsing fails
     """
     # Create simple analysis prompt with full documents
-    analysis_prompt = f"""Human: Compare these two documents and determine if the 
-    submission document meets the requirements specified in the policy document,
+    analysis_prompt = f"""Human: Carefully analyze these technical documents. Key focuses:
+
+1. **Table Comparison** - Verify these table metrics match exactly:
+   - Table row counts
+   - Column headers and order
+   - Numeric values in key columns
+   - Units of measurement
+
+2. **Structural Integrity**:
+   - Document hierarchy preservation
+   - Section numbering consistency
+   - Cross-references between sections
+
+3. **Numerical Accuracy**:
+   - Tolerance thresholds (±1% for GREEN, ±5% for YELLOW)
+   - Statistical significance markers
+   - Measurement standards cited
 
 Policy Document:
 {policy_text}
@@ -127,13 +175,11 @@ Policy Document:
 Submission Document:
 {submission_text}
 
-Based on all these comparisons, respond with exactly one word (GREEN, YELLOW, ORANGE or RED).
-In addition provide an explanation on how specific requirements are met (GREEN) or may not be met.
-
-GREEN means all requirements (quantifiable/numerical and unquantifiable) are fully met 
-YELLOW means all quantifiable/numerical requirements are met but other requirements are ambiguous.
-ORANGE means both numerical and other requirements are ambiguous or not applicable at all
-RED means one or more requirements are clearly not met.
+Respond STRICTLY using this format:
+STATUS: [COLOR]
+TABLE_ISSUES: [Count/Tables with page numbers]
+NUMERICAL_DEVIATIONS: [>1% differences with page refs]
+SECTION_DEVIATIONS: [Missing/changed sections]
 
 """ 
     
