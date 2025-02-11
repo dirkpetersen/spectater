@@ -61,9 +61,11 @@ def main():
         md_path = args.output_md
     else:
         input_path = Path(args.input_pdf)
-        md_path = input_path.with_suffix('.md').name
-        if md_path == input_path.name:
-            md_path = f"{input_path.stem}.md"
+        # Create output path in same directory as input PDF
+        md_path = str(input_path.with_suffix('.md'))
+        # Handle case where original file had no extension
+        if md_path == str(input_path):
+            md_path = str(input_path.parent / f"{input_path.stem}.md")
 
     try:
         convert_pdf_to_markdown(args.input_pdf, md_path)
