@@ -122,15 +122,19 @@ def extract_text_from_file(uploaded_file) -> str:
             if filename.lower().endswith('.pdf'):
                 # Process with validated table parameters
                 markdown_text = pymupdf4llm.to_markdown(
-                doc=temp_path,  # Correct parameter name per docs
-                table_strategy="lines_strict",  # Explicit table detection
-                graphics_limit=10000,  # Handle complex technical docs
-                write_images=False,  # Disable image processing
-                force_text=True,  # Ensure text overlaps are preserved
-                margins=0,  # Process full page content
-                image_size_limit=0,  # Include all graphics as text
-                extract_words=False  # Disable word coordinates
-            )
+                    doc=temp_path,  # Correct parameter name per docs
+                    table_strategy="lines_strict",  # Explicit table detection
+                    graphics_limit=10000,  # Handle complex technical docs
+                    write_images=False,  # Disable image processing
+                    force_text=True,  # Ensure text overlaps are preserved
+                    margins=0,  # Process full page content
+                    image_size_limit=0,  # Include all graphics as text
+                    extract_words=False  # Disable word coordinates
+                )
+            else:
+                # Direct text file handling
+                with open(temp_path, 'r', encoding='utf-8') as f:
+                    markdown_text = f.read()
             
             # Enhanced table pattern match
             markdown_text = re.sub(
