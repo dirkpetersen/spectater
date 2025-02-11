@@ -57,11 +57,12 @@ def get_bedrock_client():
 # Initialize Bedrock client
 bedrock = get_bedrock_client()
 
-def validate_pdf_file(file) -> None:
-    """Validate uploaded file is a PDF"""
-    filename = file.filename
-    if not filename.lower().endswith('.pdf'):
-        raise ValueError(f"Invalid file type: {filename}. Only PDF files are allowed.")
+def validate_file_type(file) -> None:
+    """Validate uploaded file type"""
+    filename = file.filename.lower()
+    allowed_extensions = ('.pdf', '.txt', '.html', '.md')
+    if not filename.endswith(allowed_extensions):
+        raise ValueError(f"Invalid file type: {filename}. Allowed: PDF, TXT, HTML, MD")
 
 def get_user_id():
     """Get or create user ID from cookie"""
@@ -118,8 +119,9 @@ def extract_text_from_file(uploaded_file) -> str:
             uploaded_file.save(tmp.name)
             temp_path = tmp.name
             
-            # Process with validated table parameters
-            markdown_text = pymupdf4llm.to_markdown(
+            if filename.lower().endswith('.pdf'):
+                # Process with validated table parameters
+                markdown_text = pymupdf4llm.to_markdown(
                 doc=temp_path,  # Correct parameter name per docs
                 table_strategy="lines_strict",  # Explicit table detection
                 graphics_limit=10000,  # Handle complex technical docs

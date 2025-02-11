@@ -25,8 +25,9 @@ class MockFile:
 def main():
     # Configure CLI arguments
     parser = argparse.ArgumentParser(description='Evaluate PDF submissions against requirements')
-    parser.add_argument('--spec', help='Specification PDF file path')
-    parser.add_argument('--submit', required=True, help='Submission PDF file path')
+    parser.add_argument('--spec', help='Specification document (PDF/TXT/HTML/MD)')
+    parser.add_argument('--submit', required=True, 
+                       help='Submission document (PDF/TXT/HTML/MD)')
     args = parser.parse_args()
 
     # Process specification file
@@ -34,7 +35,7 @@ def main():
     if args.spec:
         spec_file = MockFile(args.spec)
         try:
-            app.validate_pdf_file(spec_file)
+            app.validate_file_type(spec_file)
             policy_text = app.extract_text_from_file(spec_file)
             app.save_policy_to_cache(policy_text.strip(), app.get_user_id())
         except Exception as e:
@@ -50,7 +51,7 @@ def main():
     # Process submission file
     submit_file = MockFile(args.submit)
     try:
-        app.validate_pdf_file(submit_file)
+        app.validate_file_type(submit_file)
         submission_text = app.extract_text_from_file(submit_file).strip()
     except Exception as e:
         print(f"Error processing submission: {str(e)}")
