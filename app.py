@@ -255,11 +255,11 @@ def index():
             # Validate all policy files
             for file in request.files.getlist('policy'):
                 if file.filename:  # Skip empty files
-                    validate_pdf_file(file)
+                    validate_file_type(file)
             
             # Validate all submission files
             for file in request.files.getlist('submission'):
-                validate_pdf_file(file)
+                validate_file_type(file)
 
             user_id = get_user_id()
             
