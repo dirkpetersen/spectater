@@ -37,8 +37,8 @@ def index():
             session['message'] = "Please enter a valid number."
     
     return render_template('game.html', 
-                          message=session['message'], 
-                          attempts=session['attempts'],
+                          message=session.get('message', "Welcome to the game!"), 
+                          attempts=session.get('attempts', 0),
                           game_over=session.get('game_over', False))
 
 @app.route('/reset', methods=['GET'])
