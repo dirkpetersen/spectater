@@ -64,7 +64,7 @@
         </button>
     </form>
     
-    {% if attempts and attempts > 0 %}
+    {% if attempts is defined and attempts is not none and attempts > 0 %}
     <div class="attempts">
         Attempts so far: {{ attempts }}
     </div>
