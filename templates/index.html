@@ -63,26 +63,45 @@
             margin-left: 0;
             color: #666;
         }
+
+        /* Hide "No file chosen" text in file inputs */
+        input[type="file"]::file-selector-button {
+            margin-right: 10px;
+        }
+        input[type="file"] {
+            color: transparent;
+        }
+        input[type="file"]::-webkit-file-upload-button {
+            color: #212529;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">Policy / Requirements Evaluator</h1>
-        
+        <h1 class="mb-4">{{ title if title else 'Policy / Requirements Evaluator' }}</h1>
+
+        {% if introduction %}
+        <div class="alert alert-info">
+            {{ introduction }}
+        </div>
+        {% endif %}
+
         {% if error %}
         <div class="alert alert-danger">{{ error }}</div>
         {% endif %}
-        
+
         <form method="POST" enctype="multipart/form-data" id="uploadForm">
+            {% if not static_requirements %}
             <div class="mb-3">
                 <label for="policy" class="form-label">Upload the policy or requirements documents (PDF, TXT, or MD files)</label>
                 <input type="file" class="form-control" id="policy" name="policy" multiple accept=".pdf,.txt,.md">
                 <small class="form-text text-muted" id="policyHelp">Previously uploaded files will use cached analysis</small>
             </div>
+            {% endif %}
 
             <div class="mb-3">
-                <label for="submission" class="form-label">Upload the documents you'd like to verify against these requirements (PDF only)</label>
-                <input type="file" class="form-control" id="submission" name="submission" required multiple accept=".pdf">
+                <label for="submission" class="form-label">Upload the documents you'd like to verify against these requirements (PDF or MD files)</label>
+                <input type="file" class="form-control" id="submission" name="submission" required multiple accept=".pdf,.md">
                 <small class="form-text text-muted" id="submissionHelp">Previously uploaded files will use cached analysis</small>
             </div>
 
@@ -106,13 +125,68 @@
                 {{ result }}: one or more requirements are clearly not met
             {% endif %}
         </div>
-        
-        {% if explanation %}
+
+        {% if inconsistent_warning %}
+        <div class="alert alert-warning mt-3" role="alert">
+            {{ inconsistent_warning }}
+        </div>
+        {% endif %}
+
+        {% if json_parsed %}
         <div class="card mt-3">
             <div class="card-body">
-                <h5 class="card-title">Explanation for {{ result }} Status:</h5>
-                <div class="card-text markdown-content">
-                    {{ explanation|safe }}
+                <h5 class="card-title">Detailed Results</h5>
+                <div class="mb-3">
+                    <strong>Summary:</strong> {{ json_parsed.summary.statement }}<br>
+                    <strong>Total Checks:</strong> {{ json_parsed.summary.totalChecks }} |
+                    <strong>Passed:</strong> <span class="text-success">{{ json_parsed.summary.passed }}</span> |
+                    <strong>Failed:</strong> <span class="text-danger">{{ json_parsed.summary.failed }}</span>
+                </div>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Requirement</th>
+                            <th>Policy Requirement</th>
+                            <th>Submission Value</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in json_parsed.requirements %}
+                        <tr class="{% if req.pass %}table-success{% else %}table-danger{% endif %}">
+                            <td>{{ req.requirement }}</td>
+                            <td>{{ req.policyRequirement }}</td>
+                            <td>{{ req.submissionValue }}</td>
+                            <td>
+                                {% if req.pass %}
+                                <span class="badge bg-success">Pass</span>
+                                {% else %}
+                                <span class="badge bg-danger">Fail</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ req.notes }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if json_data %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Raw JSON Output <small class="text-muted">(model: {{ model_id }})</small></h5>
+                <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"><code>{{ json_data }}</code></pre>
+            </div>
+        </div>
+        {% endif %}
+
+        {% elif explanation %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <div class="card-text">
+                    <pre>{{ explanation }}</pre>
                 </div>
             </div>
         </div>
@@ -143,12 +217,14 @@
             });
         }
 
-        handleFileSelect(policyInput, 'policy');
+        if (policyInput) {
+            handleFileSelect(policyInput, 'policy');
+        }
         handleFileSelect(submissionInput, 'submission');
 
         // Hide results when new files are selected
         function hideResults() {
-            const resultBoxes = document.querySelectorAll('.result-box, .card');
+            const resultBoxes = document.querySelectorAll('.result-box, .card, .alert-warning');
             resultBoxes.forEach(box => box.style.display = 'none');
         }
 
@@ -203,7 +279,9 @@
         });
 
         // Hide results when policy files are selected
-        policyInput.addEventListener('change', hideResults);
+        if (policyInput) {
+            policyInput.addEventListener('change', hideResults);
+        }
 
         // Update file input display
         function updateFileDisplay(input, storageKey) {
@@ -217,18 +295,22 @@
 
         // Restore file information on page load
         window.addEventListener('load', function() {
-            updateFileDisplay(policyInput, 'policy');
+            if (policyInput) {
+                updateFileDisplay(policyInput, 'policy');
+            }
             updateFileDisplay(submissionInput, 'submission');
         });
 
         // Handle policy file selection
-        policyInput.addEventListener('click', function() {
-            if (!confirm('Do you want to upload a new policy document? The current one will be replaced.')) {
-                event.preventDefault();
-                return;
-            }
-            localStorage.removeItem('policy_names');
-        });
+        if (policyInput) {
+            policyInput.addEventListener('click', function() {
+                if (!confirm('Do you want to upload a new policy document? The current one will be replaced.')) {
+                    event.preventDefault();
+                    return;
+                }
+                localStorage.removeItem('policy_names');
+            });
+        }
 
         submissionInput.addEventListener('click', function() {
             localStorage.removeItem('submission_names');
