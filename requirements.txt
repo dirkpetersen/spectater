@@ -5,4 +5,3 @@ pymupdf4llm>=0.0.27
 pymupdf>=1.26.4
 beautifulsoup4>=4.14.2
 amazon-textract-response-parser>=0.1.49
-markdown>=3.9
