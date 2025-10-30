@@ -19,6 +19,86 @@
         .orange { background-color: #ffe5d0; color: #ad4f09; }
         .red { background-color: #f8d7da; color: #721c24; }
 
+        /* Oregon State University Styling */
+        :root {
+            --osu-orange: #D73F09;
+            --osu-black: #000000;
+            --osu-gray: #333333;
+        }
+
+        body {
+            font-family: 'Open Sans', 'Kievit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--osu-gray);
+            font-weight: 400;
+        }
+
+        h1 {
+            font-family: 'Stratum 2', 'Georgia', 'Times New Roman', serif;
+            color: var(--osu-orange);
+            font-weight: 700;
+            font-size: 2.5rem;
+            line-height: 1.2;
+            border-bottom: 3px solid var(--osu-orange);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            color: var(--osu-black);
+            font-weight: 700;
+            font-size: 1.75rem;
+            line-height: 1.3;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        h3 {
+            font-family: 'Open Sans', 'Kievit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            color: var(--osu-gray);
+            font-weight: 600;
+            font-size: 1.25rem;
+            line-height: 1.4;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            letter-spacing: 0.3px;
+            font-family: 'Open Sans', 'Kievit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--osu-black);
+        }
+
+        .btn-primary {
+            background-color: var(--osu-orange);
+            border-color: var(--osu-orange);
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--osu-black);
+            border-color: var(--osu-black);
+        }
+
+        .form-control {
+            border-color: #ddd;
+        }
+
+        .form-control:focus {
+            border-color: var(--osu-orange);
+            box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+        }
+
         /* Markdown content styling */
         .markdown-content h1, .markdown-content h2, .markdown-content h3 {
             margin-top: 1.5rem;
@@ -95,15 +175,22 @@
             <div class="mb-3">
                 <label for="policy" class="form-label">Upload the policy or requirements documents (PDF, TXT, or MD files)</label>
                 <input type="file" class="form-control" id="policy" name="policy" multiple accept=".pdf,.txt,.md">
-                <small class="form-text text-muted" id="policyHelp">Previously uploaded files will use cached analysis</small>
+                <small class="form-text text-muted d-block mt-2" id="policyDisplay">Requirements</small>
             </div>
             {% endif %}
 
             <div class="mb-3">
                 <label for="submission" class="form-label">Upload the documents you'd like to verify against these requirements (PDF or MD files)</label>
                 <input type="file" class="form-control" id="submission" name="submission" required multiple accept=".pdf,.md">
-                <small class="form-text text-muted" id="submissionHelp">Previously uploaded files will use cached analysis</small>
+                <small class="form-text text-muted d-block mt-2" id="submissionDisplay">Certificate</small>
             </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary" id="submitBtn">Go</button>
+            </div>
+
+            <input type="hidden" id="submissionFileName" name="submissionFileName" value="">
+            <input type="hidden" id="policyFileName" name="policyFileName" value="">
 
             <div class="d-none text-center mt-4" id="loadingSpinner">
                 <div class="spinner-border text-primary" role="status">
@@ -114,6 +201,10 @@
         </form>
         
         {% if result %}
+        <div id="uploadedFileName" style="background-color: #f0f0f0; padding: 15px; margin: 20px 0; border-left: 4px solid var(--osu-orange); border-radius: 4px;">
+            <strong>Document Analyzed:</strong> <span id="fileNameDisplay">{{ submission_filename }}</span>
+        </div>
+
         <div class="result-box {{ result.lower() }}">
             {% if result == "GREEN" %}
                 {{ result }}: all requirements are fully met
@@ -199,28 +290,34 @@
         const form = document.querySelector('form');
         const policyInput = document.getElementById('policy');
         const submissionInput = document.getElementById('submission');
+        const submissionDisplay = document.getElementById('submissionDisplay');
+        const submitBtn = document.getElementById('submitBtn');
         const loadingSpinner = document.getElementById('loadingSpinner');
 
-        // Store files when selected and update display immediately
-        function handleFileSelect(input, storageKey) {
-            input.addEventListener('change', function() {
+        // Update submission display when files are selected
+        submissionInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const files = Array.from(this.files);
+                const fileNames = files.map(file => file.name);
+                submissionDisplay.textContent = fileNames.join(', ');
+            } else {
+                submissionDisplay.textContent = 'Certificate';
+            }
+        });
+
+        // Update policy display when files are selected
+        if (policyInput) {
+            policyInput.addEventListener('change', function() {
+                const policyDisplay = document.getElementById('policyDisplay');
                 if (this.files.length > 0) {
                     const files = Array.from(this.files);
                     const fileNames = files.map(file => file.name);
-                    localStorage.setItem(storageKey + '_names', JSON.stringify(fileNames));
-
-                    // Update display immediately
-                    const helpText = input.nextElementSibling;
-                    helpText.innerHTML = `Uploaded: ${fileNames.join(', ')}`;
-                    helpText.classList.add('text-primary');
+                    policyDisplay.textContent = fileNames.join(', ');
+                } else {
+                    policyDisplay.textContent = 'Requirements';
                 }
             });
         }
-
-        if (policyInput) {
-            handleFileSelect(policyInput, 'policy');
-        }
-        handleFileSelect(submissionInput, 'submission');
 
         // Hide results when new files are selected
         function hideResults() {
@@ -228,54 +325,62 @@
             resultBoxes.forEach(box => box.style.display = 'none');
         }
 
-        // Auto-submit form when submission files are selected
-        let formSubmitted = false;
-
-        submissionInput.addEventListener('change', function() {
-            if (this.files.length > 0 && !formSubmitted) {
-                hideResults();
-
-                // Show loading spinner
-                loadingSpinner.classList.remove('d-none');
-
-                // More detailed progress stages that change frequently
-                const stages = [
-                    'Uploading documents...',
-                    'Reading PDF files...',
-                    'Extracting text content...',
-                    'Analyzing document structure...',
-                    'Detecting tables and complex elements...',
-                    'Processing tables with OCR if needed...',
-                    'Converting document to structured format...',
-                    'Loading policy requirements...',
-                    'Preparing AI evaluation...',
-                    'Analyzing submission against requirements...',
-                    'Checking numerical values and specifications...',
-                    'Verifying compliance with all requirements...',
-                    'Generating detailed evaluation report...',
-                    'Finalizing results...'
-                ];
-
-                let stageIndex = 0;
-                const stageElement = document.getElementById('processingStage');
-
-                // Start updating the stage message every 3 seconds
-                const stageInterval = setInterval(() => {
-                    stageIndex++;
-                    if (stageIndex < stages.length && stageElement) {
-                        stageElement.textContent = stages[stageIndex];
-                    } else {
-                        // Stop at the last message, don't loop back
-                        clearInterval(stageInterval);
-                    }
-                }, 3000); // Change message every 3 seconds
-
-                // Actually submit the form after a brief delay to show first status
-                setTimeout(() => {
-                    formSubmitted = true;
-                    form.submit();
-                }, 500);
+        // Handle Go button click
+        submitBtn.addEventListener('click', function(e) {
+            if (!submissionInput.files.length) {
+                alert('Please select a submission document first');
+                e.preventDefault();
+                return;
             }
+
+            // Store filenames in hidden fields
+            const submissionFileNames = Array.from(submissionInput.files).map(f => f.name).join(', ');
+            document.getElementById('submissionFileName').value = submissionFileNames;
+
+            if (policyInput && policyInput.files.length > 0) {
+                const policyFileNames = Array.from(policyInput.files).map(f => f.name).join(', ');
+                document.getElementById('policyFileName').value = policyFileNames;
+            }
+
+            hideResults();
+            loadingSpinner.classList.remove('d-none');
+
+            // More detailed progress stages that change frequently
+            const stages = [
+                'Uploading documents...',
+                'Reading PDF files...',
+                'Extracting text content...',
+                'Analyzing document structure...',
+                'Detecting tables and complex elements...',
+                'Processing tables with OCR if needed...',
+                'Converting document to structured format...',
+                'Loading policy requirements...',
+                'Preparing AI evaluation...',
+                'Analyzing submission against requirements...',
+                'Checking numerical values and specifications...',
+                'Verifying compliance with all requirements...',
+                'Generating detailed evaluation report...',
+                'Finalizing results...'
+            ];
+
+            let stageIndex = 0;
+            const stageElement = document.getElementById('processingStage');
+
+            // Start updating the stage message every 3 seconds
+            const stageInterval = setInterval(() => {
+                stageIndex++;
+                if (stageIndex < stages.length && stageElement) {
+                    stageElement.textContent = stages[stageIndex];
+                } else {
+                    // Stop at the last message, don't loop back
+                    clearInterval(stageInterval);
+                }
+            }, 3000); // Change message every 3 seconds
+
+            // Submit the form
+            setTimeout(() => {
+                form.submit();
+            }, 500);
         });
 
         // Hide results when policy files are selected
@@ -283,41 +388,15 @@
             policyInput.addEventListener('change', hideResults);
         }
 
-        // Update file input display
-        function updateFileDisplay(input, storageKey) {
-            const fileNames = JSON.parse(localStorage.getItem(storageKey + '_names') || '[]');
-            if (fileNames.length) {
-                const helpText = input.nextElementSibling;
-                helpText.innerHTML = `Uploaded: ${fileNames.join(', ')}`;
-                helpText.classList.add('text-primary');
-            }
-        }
-
-        // Restore file information on page load
+        // Display uploaded file name on page load
         window.addEventListener('load', function() {
-            if (policyInput) {
-                updateFileDisplay(policyInput, 'policy');
+            const fileNames = submissionInput.files.length > 0
+                ? Array.from(submissionInput.files).map(f => f.name).join(', ')
+                : (submissionDisplay.textContent !== 'Certificate' ? submissionDisplay.textContent : '');
+
+            if (fileNames) {
+                document.getElementById('fileNameDisplay').textContent = fileNames;
             }
-            updateFileDisplay(submissionInput, 'submission');
-        });
-
-        // Handle policy file selection
-        if (policyInput) {
-            policyInput.addEventListener('click', function() {
-                if (!confirm('Do you want to upload a new policy document? The current one will be replaced.')) {
-                    event.preventDefault();
-                    return;
-                }
-                localStorage.removeItem('policy_names');
-            });
-        }
-
-        submissionInput.addEventListener('click', function() {
-            localStorage.removeItem('submission_names');
-            // Clear the label immediately
-            const helpText = submissionInput.nextElementSibling;
-            helpText.innerHTML = 'Previously uploaded files will use cached analysis';
-            helpText.classList.remove('text-primary');
         });
     </script>
 </body>

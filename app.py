@@ -66,7 +66,7 @@ def get_textract_bucket_name():
     """Get or create S3 bucket name for Textract operations"""
     global textract_bucket_name
     if textract_bucket_name is None:
-        app_name = os.getenv('APP_NAME', 'spectater')
+        app_name = os.getenv('APP_NAME', 'spectater').lower()
         account_id = boto3.client('sts').get_caller_identity()['Account']
         session = boto3.session.Session()
         region = session.region_name or os.getenv('AWS_REGION', 'us-west-2')
@@ -796,6 +796,7 @@ def index():
 
             # Return response
             model_id = os.getenv('MODEL_ID', 'anthropic.claude-3-5-haiku-20241022-v1:0')
+            submission_filename = request.form.get('submissionFileName', '')
             return render_template('index.html',
                                  title=title,
                                  introduction=introduction,
@@ -805,7 +806,8 @@ def index():
                                  json_data=json_output,
                                  json_parsed=json_data,
                                  inconsistent_warning=inconsistent_warning,
-                                 model_id=model_id)
+                                 model_id=model_id,
+                                 submission_filename=submission_filename)
             
         except Exception as e:
             logger.error(f"Error processing request: {str(e)}")
