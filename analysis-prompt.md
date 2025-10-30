@@ -30,14 +30,14 @@ Review the `Submission Document` and verify if it meets or exceeds ALL requireme
 **Step-by-Step Instructions:**
 1.  **Parse Policy:** First, identify every distinct requirement in the `Policy Document`. Pay special attention to quantitative requirements (e.g., numerical values, minimums, maximums) and qualitative requirements (e.g., presence of a feature, specific technology to be used). For requirements with subsections (numbered like 3.3.1, 3.3.2, etc.), treat each as a separate requirement in your output. For requirements that have conditional logic (e.g., "If X then accept Y, If Z then accept W"), carefully extract and apply all conditions.
 
-   **CRITICAL: For insurance limits:**
-   - "Per occurrence" means the limit available for each individual incident, NOT the aggregate
-   - Only combine limits if policy explicitly allows it (e.g., "CGL + Umbrella can be combined")
-   - Do NOT use General Aggregate to satisfy per-occurrence requirements
-   - Treat per-occurrence and aggregate limits as separate, distinct requirements
+   **CRITICAL: For limit-based requirements:**
+   - When comparing limits, distinguish between "per occurrence" limits and "aggregate" limits - they serve different purposes
+   - Do NOT substitute or combine limits unless the policy explicitly states they can be combined
+   - If a policy specifies both a primary coverage and optional supplemental coverage, evaluate them according to the policy's rules
+   - For each coverage type, compare the submitted values directly against what the policy specifies
 
 2.  **Analyze Submission:** Go through the `Submission Document` to find the corresponding values or statements for each policy requirement.
-3.  **Compare and Evaluate:** For each requirement, perform a direct comparison based on the following rules and generate a table. Some requirements are more complex and can be met by combining multiple amounts (e.g. Umbrella). For all requirements, remember the CRITICAL SPECIAL INSTRUCTIONS above for Certificate Holder (3.3.1 and 3.3.2). The submission PASSES if it satisfies the conditions. Do not mark as fail if any acceptable variant is present.
+3.  **Compare and Evaluate:** For each requirement, perform a direct comparison based on the policy document. Some requirements may involve combining coverage types as specified in the policy. For all requirements, remember the CRITICAL SPECIAL INSTRUCTIONS above for Certificate Holder (3.3.1 and 3.3.2). The submission PASSES if it satisfies the conditions stated in the policy. Do not mark as fail if any acceptable variant is present.
 5.  **Generate Report:** Format your response according to the specified output structure, It is JSON ONLY (NOTHING ELSE)
     - **IMPORTANT: Accurate Counting**: The "totalChecks" field MUST equal the number of items in the "requirements" array. Count carefully. Do not include any duplicates. Each requirement should appear exactly once in the array.
 6.  **Verbosity and Tone:**
