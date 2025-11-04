@@ -177,3 +177,13 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 .aider*
+
+# Sensitive policy/requirements documents (should be kept locally only)
+*-Requirements.md
+*-COI-*.md
+OSU-COI-Requirements.md
+
+# Private evaluation rules (business logic, keep locally only)
+evaluation-rules.json
+*-evaluation-rules.json
+rules.json

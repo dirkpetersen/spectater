@@ -29,6 +29,19 @@ app.config['SECRET_KEY'] = os.urandom(24)
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour session
 app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', 134217728))
 
+# Load private evaluation rules
+def load_evaluation_rules() -> dict:
+    """Load evaluation rules from private JSON file."""
+    rules_path = pathlib.Path(__file__).parent / "evaluation-rules.json"
+    if rules_path.exists():
+        with open(rules_path, 'r') as f:
+            return json.load(f)
+    else:
+        logger.warning(f"evaluation-rules.json not found at {rules_path}. Using default rules.")
+        return {}
+
+evaluation_rules = load_evaluation_rules()
+
 
 def get_bedrock_client():
     """Initialize Bedrock client with local credentials and retry configuration"""
@@ -66,7 +79,7 @@ def get_textract_bucket_name():
     """Get or create S3 bucket name for Textract operations"""
     global textract_bucket_name
     if textract_bucket_name is None:
-        app_name = os.getenv('APP_NAME', 'spectater')
+        app_name = os.getenv('APP_NAME', 'spectater').lower()
         account_id = boto3.client('sts').get_caller_identity()['Account']
         session = boto3.session.Session()
         region = session.region_name or os.getenv('AWS_REGION', 'us-west-2')
@@ -418,6 +431,44 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
     prompt_path = pathlib.Path(__file__).parent / "analysis-prompt.md"
     with open(prompt_path, 'r') as f:
         analysis_prompt = f.read()
+
+    # Inject private evaluation rules into the prompt
+    if evaluation_rules:
+        rules_injection = "\n\n**EVALUATION RULES (Loaded from Configuration):**\n"
+
+        # Add Certificate Holder Name variants
+        if 'certificate_holder_name' in evaluation_rules:
+            variants = evaluation_rules['certificate_holder_name'].get('acceptable_variants', [])
+            if variants:
+                rules_injection += f"- Certificate Holder Name variants: {', '.join(variants)}\n"
+
+        # Add General Liability rules
+        if 'general_liability' in evaluation_rules:
+            gl_rules = evaluation_rules['general_liability']
+            cgl_min = gl_rules.get('cgl_minimum_per_occurrence', 2000000)
+            umbrella_required = gl_rules.get('umbrella_required_if_cgl_insufficient', True)
+            description = gl_rules.get('description', '')
+            rules_injection += f"- **CRITICAL - CGL Per Occurrence Requirement**: Minimum ${cgl_min:,} per occurrence\n"
+            rules_injection += f"- **CRITICAL - General Aggregate CANNOT substitute for per-occurrence**: Only per-occurrence limits apply\n"
+            rules_injection += f"- **CRITICAL - Umbrella requirement**: If CGL per occurrence < ${cgl_min:,}, Umbrella is REQUIRED. If no Umbrella, FAIL both 3.5 and 3.6\n"
+            if description:
+                rules_injection += f"- {description}\n"
+
+        # Add Address rules
+        if 'certificate_holder_address' in evaluation_rules:
+            addr_rules = evaluation_rules['certificate_holder_address']
+            valid_addresses = addr_rules.get('valid_addresses', [])
+            if valid_addresses:
+                rules_injection += f"- **CRITICAL - Valid Certificate Holder Addresses (ONLY these three with format variations):**\n"
+                for addr in valid_addresses:
+                    rules_injection += f"  - {addr}\n"
+                rules_injection += f"- REJECT any address NOT matching one of these three (accounting for format variations like SW/Southwest, Ave/Avenue, etc.)\n"
+
+        # Insert rules before the placeholder section
+        analysis_prompt = analysis_prompt.replace(
+            '**Policy Document:**',
+            rules_injection + '\n**Policy Document:**'
+        )
 
     # Replace placeholders (using replace instead of format to avoid issues with JSON braces)
     analysis_prompt = analysis_prompt.replace('{policy_text}', policy_text)
@@ -796,6 +847,7 @@ def index():
 
             # Return response
             model_id = os.getenv('MODEL_ID', 'anthropic.claude-3-5-haiku-20241022-v1:0')
+            submission_filename = request.form.get('submissionFileName', '')
             return render_template('index.html',
                                  title=title,
                                  introduction=introduction,
@@ -805,7 +857,8 @@ def index():
                                  json_data=json_output,
                                  json_parsed=json_data,
                                  inconsistent_warning=inconsistent_warning,
-                                 model_id=model_id)
+                                 model_id=model_id,
+                                 submission_filename=submission_filename)
             
         except Exception as e:
             logger.error(f"Error processing request: {str(e)}")
