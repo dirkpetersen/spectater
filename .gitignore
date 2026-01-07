@@ -184,6 +184,14 @@ cython_debug/
 OSU-COI-Requirements.md
 
 # Private evaluation rules (business logic, keep locally only)
+# IMPORTANT: Store all sensitive business logic, dollar amounts, and policy limits in evaluation-rules.json
+# This file is NOT pushed to GitHub and keeps sensitive information secure.
+# Examples of what goes in evaluation-rules.json:
+# - Specific dollar amounts for insurance coverage ($1M, $2M, etc.)
+# - Per-occurrence vs aggregate limit requirements
+# - Institution-specific requirements and thresholds
+# - Conditional logic for special cases
+# Do NOT embed sensitive values in analysis-prompt.md as that file is public in GitHub
 evaluation-rules.json
 *-evaluation-rules.json
 rules.json
