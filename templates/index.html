@@ -19,19 +19,52 @@
         .orange { background-color: #ffe5d0; color: #ad4f09; }
         .red { background-color: #f8d7da; color: #721c24; }
 
+        body.dark-mode .result-box.green {
+            background-color: #1a4d3c;
+            color: #90ee90;
+        }
+
+        body.dark-mode .result-box.yellow {
+            background-color: #4d4d1a;
+            color: #ffeb99;
+        }
+
+        body.dark-mode .result-box.orange {
+            background-color: #4d3c1a;
+            color: #ffc299;
+        }
+
+        body.dark-mode .result-box.red {
+            background-color: #4d1a1a;
+            color: #ff9999;
+        }
+
         /* Oregon State University Styling */
         :root {
             --osu-orange: #D73F09;
             --osu-black: #000000;
             --osu-gray: #333333;
+            --bg-primary: #ffffff;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-color: #ddd;
+        }
+
+        body.dark-mode {
+            --bg-primary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #aaaaaa;
+            --border-color: #444;
         }
 
         body {
             font-family: 'Open Sans', 'Kievit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
             font-size: 16px;
             line-height: 1.6;
-            color: var(--osu-gray);
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
             font-weight: 400;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         h1 {
@@ -48,7 +81,7 @@
 
         h2 {
             font-family: 'Georgia', 'Times New Roman', serif;
-            color: var(--osu-black);
+            color: var(--text-primary);
             font-weight: 700;
             font-size: 1.75rem;
             line-height: 1.3;
@@ -58,7 +91,7 @@
 
         h3 {
             font-family: 'Open Sans', 'Kievit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            color: var(--osu-gray);
+            color: var(--text-primary);
             font-weight: 600;
             font-size: 1.25rem;
             line-height: 1.4;
@@ -70,13 +103,14 @@
             margin-bottom: 15px;
             letter-spacing: 0.3px;
             font-family: 'Open Sans', 'Kievit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            color: var(--text-primary);
         }
 
         .form-label {
             font-weight: 600;
             font-size: 1.1rem;
             margin-bottom: 10px;
-            color: var(--osu-black);
+            color: var(--text-primary);
         }
 
         .btn-primary {
@@ -91,12 +125,134 @@
         }
 
         .form-control {
-            border-color: #ddd;
+            border-color: var(--border-color);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
         }
 
         .form-control:focus {
             border-color: var(--osu-orange);
-            box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+            box-shadow: 0 0 0 0.2rem rgba(215, 63, 9, 0.25);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        /* Dark mode specific adjustments */
+        body.dark-mode .form-control {
+            border-color: #555;
+        }
+
+        body.dark-mode .card {
+            background-color: #2a2a2a;
+            border-color: #444;
+        }
+
+        body.dark-mode .alert {
+            background-color: #2a2a2a;
+            border-color: #444;
+            color: var(--text-primary);
+        }
+
+        body.dark-mode table {
+            color: var(--text-primary);
+            border-color: #444;
+        }
+
+        body.dark-mode .table-sm th {
+            background-color: #3a3a3a;
+            color: var(--text-primary);
+        }
+
+        body.dark-mode .table-sm td {
+            border-color: #444;
+            color: var(--text-primary);
+        }
+
+        body.dark-mode .table-success {
+            background-color: #d4edda !important;
+            color: #000000 !important;
+        }
+
+        body.dark-mode .table-success td {
+            color: #000000 !important;
+        }
+
+        body.dark-mode .table-danger {
+            background-color: #f8d7da !important;
+            color: #000000 !important;
+        }
+
+        body.dark-mode .table-danger td {
+            color: #000000 !important;
+        }
+
+        body.dark-mode .table-warning {
+            background-color: #fff3cd !important;
+            color: #000000 !important;
+        }
+
+        body.dark-mode .table-warning td {
+            color: #000000 !important;
+        }
+
+        body.dark-mode pre {
+            background-color: #2a2a2a !important;
+            color: var(--text-primary);
+        }
+
+        body.dark-mode code {
+            color: var(--text-primary);
+        }
+
+        #policyDisplay, #submissionDisplay {
+            color: #666 !important;
+        }
+
+        body.dark-mode #policyDisplay, body.dark-mode #submissionDisplay {
+            color: #aaa !important;
+        }
+
+        #uploadedFileName {
+            background-color: var(--bg-primary);
+            border-left-color: var(--osu-orange);
+            color: #000000 !important;
+            border: 1px solid var(--border-color);
+        }
+
+        #uploadedFileName strong {
+            color: #000000 !important;
+        }
+
+        body.dark-mode #uploadedFileName {
+            background-color: #2a2a2a;
+            border-left-color: var(--osu-orange);
+            color: #000000 !important;
+            border-color: #444;
+        }
+
+        body.dark-mode #uploadedFileName strong {
+            color: #000000 !important;
+        }
+
+        body.dark-mode #fileNameDisplay {
+            color: #000000 !important;
+        }
+
+        #fileNameDisplay {
+            color: #000000 !important;
+        }
+
+        body.dark-mode .card-body {
+            background-color: #2a2a2a;
+            color: var(--text-primary);
+        }
+
+        body.dark-mode .card-title {
+            color: var(--text-primary);
+        }
+
+        body.dark-mode strong {
+            color: var(--text-primary);
         }
 
         /* Markdown content styling */
@@ -110,18 +266,31 @@
         }
         .markdown-content p {
             margin-bottom: 0.75rem;
+            color: var(--text-primary);
         }
         .markdown-content code {
             background-color: #f5f5f5;
             padding: 0.2rem 0.4rem;
             border-radius: 3px;
             font-size: 0.9em;
+            color: #333;
         }
         .markdown-content pre {
             background-color: #f5f5f5;
             padding: 1rem;
             border-radius: 5px;
             overflow-x: auto;
+            color: #333;
+        }
+
+        body.dark-mode .markdown-content code {
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .markdown-content pre {
+            background-color: #3a3a3a;
+            color: #e0e0e0;
         }
         .markdown-content table {
             border-collapse: collapse;
@@ -158,7 +327,12 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">{{ title if title else 'Policy / Requirements Evaluator' }}</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1 class="mb-0">{{ title if title else 'Policy / Requirements Evaluator' }}</h1>
+            <button id="darkModeToggle" class="btn btn-outline-secondary" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                <span id="darkModeIcon">🌙</span>
+            </button>
+        </div>
 
         {% if introduction %}
         <div class="alert alert-info">
@@ -209,7 +383,7 @@
             {% if result == "GREEN" %}
                 {{ result }}: all requirements are fully met
             {% elif result == "YELLOW" %}
-                {{ result }}: all quantifiable/numerical requirements are met but other requirements are ambiguous
+                {{ result }}: most requirements are met, but some are only partially compliant and need review
             {% elif result == "ORANGE" %}
                 {{ result }}: both numerical and other requirements are ambiguous and need clarification
             {% elif result == "RED" %}
@@ -231,6 +405,7 @@
                     <strong>Summary:</strong> {{ json_parsed.summary.statement }}<br>
                     <strong>Total Checks:</strong> {{ json_parsed.summary.totalChecks }} |
                     <strong>Passed:</strong> <span class="text-success">{{ json_parsed.summary.passed }}</span> |
+                    {% if json_parsed.summary.partial %}<strong>Partial:</strong> <span class="text-warning">{{ json_parsed.summary.partial }}</span> |{% endif %}
                     <strong>Failed:</strong> <span class="text-danger">{{ json_parsed.summary.failed }}</span>
                 </div>
                 <table class="table table-sm table-bordered">
@@ -245,12 +420,14 @@
                     </thead>
                     <tbody>
                         {% for req in json_parsed.requirements %}
-                        <tr class="{% if req.pass %}table-success{% else %}table-danger{% endif %}">
+                        <tr class="{% if req.pass_status == 'PARTIAL' %}table-warning{% elif req.pass %}table-success{% else %}table-danger{% endif %}">
                             <td>{{ req.requirement }}</td>
                             <td>{{ req.policyRequirement }}</td>
                             <td>{{ req.submissionValue }}</td>
                             <td>
-                                {% if req.pass %}
+                                {% if req.pass_status == 'PARTIAL' %}
+                                <span class="badge bg-warning text-dark">Partial</span>
+                                {% elif req.pass %}
                                 <span class="badge bg-success">Pass</span>
                                 {% else %}
                                 <span class="badge bg-danger">Fail</span>
@@ -397,6 +574,25 @@
             if (fileNames) {
                 document.getElementById('fileNameDisplay').textContent = fileNames;
             }
+        });
+
+        // Dark mode toggle functionality
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const darkModeIcon = document.getElementById('darkModeIcon');
+        const body = document.body;
+
+        // Check if dark mode preference is saved in localStorage
+        const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
+        if (darkModeEnabled) {
+            body.classList.add('dark-mode');
+            darkModeIcon.textContent = '☀️';
+        }
+
+        darkModeToggle.addEventListener('click', function() {
+            body.classList.toggle('dark-mode');
+            const isEnabled = body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isEnabled);
+            darkModeIcon.textContent = isEnabled ? '☀️' : '🌙';
         });
     </script>
 </body>

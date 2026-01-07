@@ -1,5 +1,9 @@
 #! /usr/bin/env python3
 
+# Suppress multiprocessing resource tracker warnings that cause exit
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning)
+
 import uuid, os, tempfile, logging, json, pathlib, re, time, atexit, hashlib, ipaddress
 from datetime import datetime, timezone, timedelta
 from typing import Tuple, List, Optional
@@ -19,12 +23,23 @@ if not dotenv.load_dotenv():
 logger = logging.getLogger(__name__)
 def configure_logging():
     log_level = logging.DEBUG if app.debug else logging.INFO
-    logging.basicConfig(level=log_level, 
+    logging.basicConfig(level=log_level,
             format=os.getenv('LOG_FORMAT', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
 
 debug_mode = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
 app = Flask(__name__, static_url_path='/static', static_folder='static') # or app = Flask(__name__)
+
+# Suppress broken pipe errors from client disconnections (harmless warnings)
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+
+# Suppress BrokenPipeError at the OS signal level (macOS/Linux)
+try:
+    import signal
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+except (AttributeError, ValueError):
+    pass  # Windows doesn't have SIGPIPE
+
 app.config['SECRET_KEY'] = os.urandom(24)
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour session
 app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', 134217728))
@@ -109,7 +124,19 @@ def ensure_s3_bucket():
                 )
             logger.info(f"Created Textract bucket: {bucket_name}")
         except ClientError as e:
-            if 'BucketAlreadyOwnedByYou' not in str(e):
+            error_code = e.response.get('Error', {}).get('Code', '')
+            # Handle race condition where bucket is being created by another process
+            if error_code in ['BucketAlreadyOwnedByYou', 'OperationAborted', 'BucketAlreadyExists']:
+                logger.info(f"Bucket creation race condition detected, bucket already exists or in progress: {bucket_name}")
+                # Wait a moment and verify bucket exists
+                import time
+                time.sleep(1)
+                try:
+                    s3.head_bucket(Bucket=bucket_name)
+                    logger.info(f"Bucket confirmed exists: {bucket_name}")
+                except:
+                    logger.warning(f"Bucket check failed, but continuing: {bucket_name}")
+            else:
                 raise
 
     return bucket_name
@@ -231,6 +258,10 @@ def analyze_pdf_with_textract(pdf_path: str) -> dict:
     s3 = boto3.client('s3')
     textract = boto3.client('textract')
 
+    # Ensure textract folder exists
+    textract_dir = pathlib.Path('textract')
+    textract_dir.mkdir(exist_ok=True)
+
     # Upload to S3
     file_name = pathlib.Path(pdf_path).name
     object_key = f'documents/{uuid.uuid4()}/{file_name}'
@@ -270,7 +301,16 @@ def analyze_pdf_with_textract(pdf_path: str) -> dict:
             next_token = response.get('NextToken')
 
         logger.info(f"Textract analysis complete: {len(all_blocks)} blocks retrieved")
-        return {'Blocks': all_blocks}
+
+        # Save raw Textract output to textract folder
+        textract_response = {'Blocks': all_blocks}
+        output_filename = f"{pathlib.Path(file_name).stem}_textract_output.json"
+        output_path = textract_dir / output_filename
+        with open(output_path, 'w') as f:
+            json.dump(textract_response, f, indent=2)
+        logger.info(f"Saved Textract output to {output_path}")
+
+        return textract_response
 
     finally:
         # Clean up S3 object
@@ -348,28 +388,90 @@ def extract_text_from_file(uploaded_file, reject_tables=False, use_textract_for_
             temp_path = tmp.name
 
             if filename.lower().endswith('.pdf'):
-                # Process with validated table parameters
-                markdown_text = pymupdf4llm.to_markdown(
-                    doc=temp_path,  # Correct parameter name per docs
-                    table_strategy="lines_strict",  # Explicit table detection
-                    graphics_limit=10000,  # Handle complex technical docs
-                    write_images=False,  # Disable image processing
-                    force_text=True,  # Ensure text overlaps are preserved
-                    margins=0,  # Process full page content
-                    image_size_limit=0,  # Include all graphics as text
-                    extract_words=False  # Disable word coordinates
-                )
+                # First, try to detect if PDF is image-based by checking for any extractable text
+                import fitz
+                doc = fitz.open(temp_path)
+                is_image_pdf = True
+                page_count = len(doc)
 
-                # Check for tables
+                for page in doc:
+                    text = page.get_text().strip()
+                    if text:
+                        is_image_pdf = False
+                        break
+                doc.close()
+
+                # If it's image-based, use Textract directly
+                if is_image_pdf and page_count > 0:
+                    logger.info(f"Document '{filename}' appears to be image-based. Using AWS Textract for OCR.")
+                    try:
+                        textract_response = analyze_pdf_with_textract(temp_path)
+                        markdown_text = convert_textract_to_markdown(textract_response)
+                        logger.info(f"Textract OCR analysis complete for '{filename}'")
+                    except Exception as textract_error:
+                        logger.error(f"Textract failed for '{filename}': {str(textract_error)}")
+                        raise ValueError(f"Failed to extract text from '{filename}' using both standard methods and OCR: {str(textract_error)}")
+                else:
+                    # Try standard extraction methods for text-based PDFs
+                    try:
+                        # Try primary extraction with table strategy
+                        try:
+                            markdown_text = pymupdf4llm.to_markdown(
+                                doc=temp_path,
+                                table_strategy="lines_strict",
+                                write_images=False,
+                                force_text=True,
+                                margins=0
+                            )
+                        except Exception as inner_e:
+                            # If table strategy fails, try simpler approach
+                            logger.debug(f"pymupdf4llm with table_strategy failed: {inner_e}. Retrying with default strategy.")
+                            markdown_text = pymupdf4llm.to_markdown(
+                                doc=temp_path,
+                                write_images=False,
+                                force_text=True
+                            )
+                    except Exception as e:
+                        # Fallback to PyMuPDF extraction if pymupdf4llm fails
+                        logger.warning(f"pymupdf4llm failed for '{filename}': {str(e)}. Trying fallback extraction.")
+                        doc = fitz.open(temp_path)
+                        markdown_text = ""
+                        for page_num, page in enumerate(doc, start=1):
+                            if page_num > 1:
+                                markdown_text += f"\n---\n\n## Page {page_num}\n\n"
+                            # Try multiple text extraction methods
+                            text = page.get_text()
+                            if not text.strip():
+                                # Try alternate extraction with layout preservation
+                                text = page.get_text("blocks")
+                                if isinstance(text, list):
+                                    text = "\n".join(block[4] for block in text if len(block) > 4 and isinstance(block[4], str))
+                            if not text.strip():
+                                # Try with dict format for more detailed extraction
+                                text = page.get_text("dict")
+                                if isinstance(text, dict) and "blocks" in text:
+                                    text = "\n".join(block.get("text", "") for block in text["blocks"] if block.get("text"))
+                            markdown_text += text
+                        doc.close()
+
+                # Check for empty text (scanned image-only PDF) or tables
+                is_empty_text = len(markdown_text.strip()) == 0
                 has_html_tables = bool(re.search(r'<table\b[^>]*>.*?</table>', markdown_text, flags=re.DOTALL|re.IGNORECASE))
                 has_md_tables = bool(re.search(r'\|.*\|.*\n\|[\s:|-]+\|', markdown_text))
 
-                if has_html_tables or has_md_tables:
-                    if reject_tables:
+                # Use Textract for scanned PDFs (empty text) or PDFs with tables
+                if is_empty_text or has_html_tables or has_md_tables:
+                    if is_empty_text and not use_textract_for_tables:
+                        # Auto-enable Textract for scanned documents
+                        logger.info(f"Document '{filename}' appears to be scanned (no extractable text). Automatically using AWS Textract for OCR analysis.")
+                        use_textract_for_tables = True
+
+                    if reject_tables and (has_html_tables or has_md_tables):
                         raise ValueError(f"Document '{filename}' contains tables which are too complex to process. Please upload a document without tables.")
                     elif use_textract_for_tables:
-                        # Use Textract for complex PDFs with tables
-                        logger.info(f"Document '{filename}' contains tables. Using AWS Textract for OCR analysis.")
+                        # Use Textract for complex PDFs with tables or scanned documents
+                        reason = "scanned image content" if is_empty_text else "tables"
+                        logger.info(f"Document '{filename}' contains {reason}. Using AWS Textract for OCR analysis.")
                         textract_response = analyze_pdf_with_textract(temp_path)
                         markdown_text = convert_textract_to_markdown(textract_response)
                         logger.info(f"Textract OCR analysis complete for '{filename}'")
@@ -447,22 +549,45 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
             gl_rules = evaluation_rules['general_liability']
             cgl_min = gl_rules.get('cgl_minimum_per_occurrence', 2000000)
             umbrella_required = gl_rules.get('umbrella_required_if_cgl_insufficient', True)
+            combined_coverage = gl_rules.get('combined_coverage_logic', False)
             description = gl_rules.get('description', '')
+            pass_conditions = gl_rules.get('pass_conditions', [])
+            fail_conditions = gl_rules.get('fail_conditions', [])
+
             rules_injection += f"- **CRITICAL - CGL Per Occurrence Requirement**: Minimum ${cgl_min:,} per occurrence\n"
             rules_injection += f"- **CRITICAL - General Aggregate CANNOT substitute for per-occurrence**: Only per-occurrence limits apply\n"
-            rules_injection += f"- **CRITICAL - Umbrella requirement**: If CGL per occurrence < ${cgl_min:,}, Umbrella is REQUIRED. If no Umbrella, FAIL both 3.5 and 3.6\n"
+
+            if combined_coverage:
+                rules_injection += f"- **CRITICAL - COMBINED COVERAGE LOGIC ENABLED**: If CGL per occurrence < ${cgl_min:,}, the submission may still PASS if CGL + Umbrella together ≥ ${cgl_min:,} per occurrence. In this case, BOTH 3.5 (CGL) and 3.6 (Umbrella) PASS.\n"
+            else:
+                rules_injection += f"- **CRITICAL - Umbrella requirement**: If CGL per occurrence < ${cgl_min:,}, Umbrella is REQUIRED. If no Umbrella, FAIL both 3.5 and 3.6\n"
+
             if description:
                 rules_injection += f"- {description}\n"
+
+            if pass_conditions:
+                rules_injection += "- **PASS CONDITIONS (When both 3.5 and 3.6 Pass):**\n"
+                for pass_cond in pass_conditions:
+                    rules_injection += f"  - {pass_cond}\n"
+
+            if fail_conditions:
+                rules_injection += "- **FAIL CONDITIONS:**\n"
+                for fail_cond in fail_conditions:
+                    rules_injection += f"  - {fail_cond}\n"
 
         # Add Address rules
         if 'certificate_holder_address' in evaluation_rules:
             addr_rules = evaluation_rules['certificate_holder_address']
             valid_addresses = addr_rules.get('valid_addresses', [])
+            address_keywords = addr_rules.get('address_keywords', [])
             if valid_addresses:
-                rules_injection += f"- **CRITICAL - Valid Certificate Holder Addresses (ONLY these three with format variations):**\n"
+                rules_injection += f"- **CRITICAL - Valid Certificate Holder Addresses (with format variations):**\n"
                 for addr in valid_addresses:
                     rules_injection += f"  - {addr}\n"
-                rules_injection += f"- REJECT any address NOT matching one of these three (accounting for format variations like SW/Southwest, Ave/Avenue, etc.)\n"
+                if address_keywords:
+                    rules_injection += f"- **Address Keywords** (also acceptable, indicate same location): {', '.join(address_keywords)}\n"
+                rules_injection += f"- Accept format variations like SW/Southwest, Ave/Avenue, St/Street, Blvd/Boulevard, MU/Memorial Union, etc.\n"
+                rules_injection += f"- REJECT any address NOT matching one of these locations (accounting for format variations)\n"
 
         # Insert rules before the placeholder section
         analysis_prompt = analysis_prompt.replace(
@@ -572,9 +697,10 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
             try:
                 json_data = json.loads(json_str)
 
-                # Count actual pass/fail by iterating through requirements
+                # Count actual pass/fail/partial by iterating through requirements
                 requirements = json_data.get('requirements', [])
-                actual_passed = sum(1 for req in requirements if req.get('pass', False))
+                actual_passed = sum(1 for req in requirements if req.get('pass', False) and req.get('pass_status') != 'PARTIAL')
+                actual_partial = sum(1 for req in requirements if req.get('pass', False) and req.get('pass_status') == 'PARTIAL')
                 actual_failed = sum(1 for req in requirements if not req.get('pass', False))
                 actual_total = len(requirements)
 
@@ -582,22 +708,37 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
                 summary = json_data.get('summary', {})
                 summary_total = summary.get('totalChecks', 0)
                 summary_passed = summary.get('passed', 0)
+                summary_partial = summary.get('partial', 0)
                 summary_failed = summary.get('failed', 0)
 
-                # Check for inconsistencies
+                # Check for inconsistencies and auto-correct summary counts
                 inconsistent = False
-                if actual_total != summary_total or actual_passed != summary_passed or actual_failed != summary_failed:
+                if actual_total != summary_total or actual_passed != summary_passed or actual_failed != summary_failed or actual_partial != summary_partial:
                     inconsistent = True
-                    logger.warning(f"JSON summary inconsistent! Summary says {summary_total} total, {summary_passed} passed, {summary_failed} failed, but requirements show {actual_total} total, {actual_passed} passed, {actual_failed} failed")
+                    logger.warning(f"JSON summary inconsistent! Summary says {summary_total} total, {summary_passed} passed, {summary_partial} partial, {summary_failed} failed, but requirements show {actual_total} total, {actual_passed} passed, {actual_partial} partial, {actual_failed} failed")
 
-                # Determine status based on actual pass/fail in requirements (not summary)
+                    # Auto-correct the summary counts to match the actual array
+                    logger.info(f"Auto-correcting summary counts to match requirements array")
+                    json_data['summary']['totalChecks'] = actual_total
+                    json_data['summary']['passed'] = actual_passed
+                    json_data['summary']['partial'] = actual_partial
+                    json_data['summary']['failed'] = actual_failed
+
+                # Determine status based on actual pass/fail/partial in requirements (not summary)
                 all_passed = all(req.get('pass', False) for req in requirements)
-                status = "GREEN" if all_passed else "RED"
+                has_partial = any(req.get('pass_status') == 'PARTIAL' for req in requirements)
+
+                if all_passed and not has_partial:
+                    status = "GREEN"
+                elif has_partial and actual_failed == 0:
+                    status = "YELLOW"
+                else:
+                    status = "RED"
 
                 if app.debug:
                     print(f"[DEBUG] Parsed JSON with {actual_total} requirements")
-                    print(f"[DEBUG] Actual counts: {actual_passed} passed, {actual_failed} failed")
-                    print(f"[DEBUG] Summary counts: {summary_passed} passed, {summary_failed} failed")
+                    print(f"[DEBUG] Actual counts: {actual_passed} passed, {actual_partial} partial, {actual_failed} failed")
+                    print(f"[DEBUG] Summary counts: {summary_passed} passed, {summary_partial} partial, {summary_failed} failed")
                     print(f"[DEBUG] Status determined: {status}")
                     if inconsistent:
                         print(f"[DEBUG] WARNING: Inconsistent JSON summary! Check analysis-prompt.md or policy document.")
@@ -811,24 +952,24 @@ def index():
 
                     # Verify consistency by counting actual pass/fail
                     requirements = json_data.get('requirements', [])
-                    actual_passed = sum(1 for req in requirements if req.get('pass', False))
+                    actual_passed = sum(1 for req in requirements if req.get('pass', False) and req.get('pass_status') != 'PARTIAL')
+                    actual_partial = sum(1 for req in requirements if req.get('pass', False) and req.get('pass_status') == 'PARTIAL')
                     actual_failed = sum(1 for req in requirements if not req.get('pass', False))
                     actual_total = len(requirements)
 
                     summary = json_data.get('summary', {})
                     summary_total = summary.get('totalChecks', 0)
                     summary_passed = summary.get('passed', 0)
+                    summary_partial = summary.get('partial', 0)
                     summary_failed = summary.get('failed', 0)
 
                     inconsistent_warning = None
-                    if actual_total != summary_total or actual_passed != summary_passed or actual_failed != summary_failed:
+                    if actual_total != summary_total or actual_passed != summary_passed or actual_failed != summary_failed or actual_partial != summary_partial:
                         inconsistent_warning = (
-                            f"⚠️ Inconsistent JSON results detected! "
-                            f"Summary reports {summary_total} total ({summary_passed} passed, {summary_failed} failed), "
-                            f"but requirements show {actual_total} total ({actual_passed} passed, {actual_failed} failed). "
-                            f"Consider reviewing analysis-prompt.md or policy document for clarity."
+                            f"ℹ️ Note: Summary counts were auto-corrected to match requirements array. "
+                            f"Corrected to {actual_total} total ({actual_passed} passed, {actual_partial} partial, {actual_failed} failed)."
                         )
-                        logger.warning(inconsistent_warning)
+                        logger.info(inconsistent_warning)
 
                     if app.debug:
                         print(f"[DEBUG] Successfully parsed JSON!")
@@ -893,6 +1034,8 @@ if __name__ == '__main__':
         host='0.0.0.0',
         port=int(os.getenv('FLASK_PORT', 5000)),
         debug=debug_mode,
-        ssl_context=ssl_context
+        ssl_context=ssl_context,
+        use_reloader=False,
+        threaded=True
     )
 
