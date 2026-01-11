@@ -40,9 +40,22 @@ try:
 except (AttributeError, ValueError):
     pass  # Windows doesn't have SIGPIPE
 
+def get_int_env(key: str, default: int) -> int:
+    """Safely get integer from environment variable, stripping comments and whitespace."""
+    value = os.getenv(key)
+    if value is None:
+        return default
+    # Strip comments (anything after #), whitespace, and quotes
+    value = value.split('#')[0].strip().strip('\'"')
+    try:
+        return int(value)
+    except ValueError:
+        logger.warning(f"Invalid integer value for {key}: {value}, using default: {default}")
+        return default
+
 app.config['SECRET_KEY'] = os.urandom(24)
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour session
-app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', 134217728))
+app.config['MAX_CONTENT_LENGTH'] = get_int_env('MAX_CONTENT_LENGTH', 134217728)
 
 # Load private evaluation rules
 def load_evaluation_rules() -> dict:
@@ -67,7 +80,7 @@ def get_bedrock_client():
         # Configure retry behavior
         retry_config = Config(
             retries={
-                "max_attempts": int(os.getenv('MAX_RETRIES', 10)),
+                "max_attempts": get_int_env('MAX_RETRIES', 10),
                 "mode": "standard",
             }
         )
@@ -477,7 +490,7 @@ def extract_text_from_file(uploaded_file, reject_tables=False, use_textract_for_
                         logger.info(f"Textract OCR analysis complete for '{filename}'")
 
                         # Apply character limit if configured
-                        max_chars = int(os.getenv('MAX_CHARS_PER_DOC', 0))
+                        max_chars = get_int_env('MAX_CHARS_PER_DOC', 0)
                         if max_chars > 0 and len(markdown_text) > max_chars:
                             original_length = len(markdown_text)
                             markdown_text = markdown_text[:max_chars]
@@ -498,7 +511,7 @@ def extract_text_from_file(uploaded_file, reject_tables=False, use_textract_for_
             )
 
             # Apply character limit if configured
-            max_chars = int(os.getenv('MAX_CHARS_PER_DOC', 0))
+            max_chars = get_int_env('MAX_CHARS_PER_DOC', 0)
             if max_chars > 0 and len(markdown_text) > max_chars:
                 original_length = len(markdown_text)
                 markdown_text = markdown_text[:max_chars]
@@ -608,7 +621,7 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
         calculated_max_tokens = (input_bytes * 2) // 3
 
         # Use configured MAX_TOKENS as a minimum/override, or use calculated value
-        configured_max_tokens = int(os.getenv('MAX_TOKENS', 0))
+        configured_max_tokens = get_int_env('MAX_TOKENS', 0)
         if configured_max_tokens > 0:
             max_tokens = max(configured_max_tokens, calculated_max_tokens)
         else:
@@ -1032,7 +1045,7 @@ if __name__ == '__main__':
     
     app.run(
         host='0.0.0.0',
-        port=int(os.getenv('FLASK_PORT', 5000)),
+        port=get_int_env('FLASK_PORT', 5000),
         debug=debug_mode,
         ssl_context=ssl_context,
         use_reloader=False,
