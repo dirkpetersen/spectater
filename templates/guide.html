@@ -242,6 +242,50 @@
             background-color: #2a2a2a;
         }
 
+        .word-section {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #e8f4f8;
+            border-left: 4px solid var(--osu-orange);
+            border-radius: 4px;
+        }
+
+        body.dark-mode .word-section {
+            background-color: #1a3a44;
+            border-left-color: var(--osu-orange);
+        }
+
+        .word-section a {
+            color: var(--osu-orange);
+            text-decoration: none;
+        }
+
+        .word-section a:hover {
+            text-decoration: underline;
+        }
+
+        body.dark-mode .word-section a {
+            color: #66b3cc;
+        }
+
+        .word-section > div {
+            background-color: white;
+        }
+
+        body.dark-mode .word-section > div {
+            background-color: #2a2a2a;
+            color: var(--text-primary);
+            border-color: #444;
+        }
+
+        body.dark-mode .word-section ol, body.dark-mode .word-section ul {
+            color: var(--text-primary);
+        }
+
+        body.dark-mode .word-section li {
+            color: var(--text-primary);
+        }
+
         .dark-mode-toggle {
             position: absolute;
             top: 20px;
@@ -601,6 +645,49 @@ Version 1.2 - Updated General Liability limits [Date]</code></pre>
                 <strong>File:</strong> osu-requirements-template.md<br>
                 <strong>Size:</strong> ~18 KB | <strong>Format:</strong> Markdown (.md)<br>
                 Open in any text editor and fill in the [TO BE FILLED: ...] values
+            </p>
+        </div>
+
+        <!-- Word Users Section -->
+        <div class="word-section">
+            <h3 style="margin-top: 0; color: var(--text-primary);">📝 Prefer Using Microsoft Word?</h3>
+            <p style="margin-bottom: 15px;">If you'd rather edit the template in Microsoft Word instead of a text editor, you can use <strong>Writage</strong> – a free Word plugin that adds full Markdown editing support to Word.</p>
+
+            <div style="background-color: white; padding: 15px; border-radius: 4px; margin-bottom: 15px;">
+                <h4 style="margin-top: 0;">How to Use Writage with Word:</h4>
+                <ol style="margin-bottom: 10px;">
+                    <li><strong>Install Writage</strong>
+                        <ul>
+                            <li>Download from: <a href="https://www.writage.com/" target="_blank" style="color: var(--osu-orange); text-decoration: none;">www.writage.com</a></li>
+                            <li>It's free and compatible with Word 2010 and later (Windows and Mac)</li>
+                            <li>Follow the installer instructions</li>
+                        </ul>
+                    </li>
+                    <li><strong>Open the Template</strong>
+                        <ul>
+                            <li>Download the template file (osu-requirements-template.md)</li>
+                            <li>Right-click on the file → Open with → Microsoft Word</li>
+                            <li>Word will automatically open it with Writage support</li>
+                        </ul>
+                    </li>
+                    <li><strong>Edit in Word</strong>
+                        <ul>
+                            <li>Edit the document as you normally would in Word</li>
+                            <li>Writage maintains the Markdown formatting automatically</li>
+                            <li>Fill in all [TO BE FILLED: ...] values</li>
+                        </ul>
+                    </li>
+                    <li><strong>Save and Upload</strong>
+                        <ul>
+                            <li>Save the file as Markdown (.md) using Writage</li>
+                            <li>Upload to SpecTater for evaluation</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <p style="margin-bottom: 0; font-size: 0.9em; color: var(--text-secondary);">
+                <strong>Benefits:</strong> Use familiar Word formatting while maintaining Markdown compatibility. Writage handles all the technical details so you can focus on content.
             </p>
         </div>
 
