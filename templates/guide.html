@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Write Requirements</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Oregon State University Styling */
+        :root {
+            --osu-orange: #D73F09;
+            --osu-black: #000000;
+            --osu-gray: #333333;
+            --bg-primary: #ffffff;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-color: #ddd;
+        }
+
+        body.dark-mode {
+            --bg-primary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #aaaaaa;
+            --border-color: #444;
+        }
+
+        body {
+            font-family: 'Open Sans', 'Kievit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            font-weight: 400;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        h1 {
+            font-family: 'Stratum 2', 'Georgia', 'Times New Roman', serif;
+            color: var(--osu-orange);
+            font-weight: 700;
+            font-size: 2.5rem;
+            line-height: 1.2;
+            border-bottom: 3px solid var(--osu-orange);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 1.75rem;
+            line-height: 1.3;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        h3 {
+            font-family: 'Open Sans', 'Kievit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 1.25rem;
+            line-height: 1.4;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            letter-spacing: 0.3px;
+            color: var(--text-primary);
+        }
+
+        /* Header with back button */
+        .guide-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .back-btn {
+            background-color: var(--osu-orange);
+            border-color: var(--osu-orange);
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background-color: var(--osu-black);
+            border-color: var(--osu-black);
+            text-decoration: none;
+            color: white;
+        }
+
+        /* Code and examples */
+        code {
+            background-color: #f5f5f5;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+            color: #333;
+        }
+
+        pre {
+            background-color: #f5f5f5;
+            padding: 1rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .example-box {
+            background-color: #f0f0f0;
+            border-left: 4px solid var(--osu-orange);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .good-example {
+            background-color: #d4edda;
+            border-left-color: #28a745;
+        }
+
+        .bad-example {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+        }
+
+        .icon {
+            font-size: 1.2em;
+            margin-right: 5px;
+        }
+
+        table {
+            margin: 20px 0;
+        }
+
+        table th {
+            background-color: var(--osu-orange);
+            color: white;
+            font-weight: 600;
+        }
+
+        body.dark-mode code {
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode pre {
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .example-box {
+            background-color: #2a2a2a;
+            border-color: #555;
+        }
+
+        body.dark-mode .good-example {
+            background-color: #1a4d3c;
+            border-left-color: #90ee90;
+        }
+
+        body.dark-mode .bad-example {
+            background-color: #4d1a1a;
+            border-left-color: #ff9999;
+        }
+
+        body.dark-mode table {
+            color: var(--text-primary);
+            border-color: #444;
+        }
+
+        body.dark-mode table th {
+            background-color: var(--osu-orange);
+            color: white;
+        }
+
+        body.dark-mode table td {
+            border-color: #444;
+            color: var(--text-primary);
+        }
+
+        .btn-primary {
+            background-color: var(--osu-orange);
+            border-color: var(--osu-orange);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--osu-black);
+            border-color: var(--osu-black);
+        }
+
+        .toc-section {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+
+        .toc-section h3 {
+            margin-top: 0;
+        }
+
+        .toc-section ul {
+            margin-bottom: 0;
+        }
+
+        .toc-section a {
+            color: var(--osu-orange);
+            text-decoration: none;
+        }
+
+        .toc-section a:hover {
+            text-decoration: underline;
+        }
+
+        body.dark-mode .toc-section {
+            background-color: #2a2a2a;
+        }
+
+        .download-section {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        body.dark-mode .download-section {
+            background-color: #2a2a2a;
+        }
+
+        .dark-mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--osu-orange);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-to-top:hover {
+            background-color: var(--osu-black);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .back-to-top.show {
+            display: flex;
+        }
+
+        body.dark-mode .back-to-top {
+            background-color: var(--osu-orange);
+            box-shadow: 0 4px 6px rgba(215, 63, 9, 0.3);
+        }
+
+        body.dark-mode .back-to-top:hover {
+            background-color: var(--osu-black);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5 mb-5">
+        <div class="guide-header">
+            <a href="/" class="back-btn">
+                <span>←</span> Back to Evaluator
+            </a>
+        </div>
+
+        <div style="position: relative;">
+            <h1>How to Write Requirements Documents</h1>
+            <button id="darkModeToggle" class="btn btn-outline-secondary dark-mode-toggle" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                <span id="darkModeIcon">🌙</span>
+            </button>
+        </div>
+
+        <p><strong>Learn how to write clear, effective requirements that the AI can accurately evaluate.</strong></p>
+
+        <!-- Table of Contents -->
+        <div class="toc-section">
+            <h3>Quick Navigation</h3>
+            <ul>
+                <li><a href="#principles">Key Principles</a></li>
+                <li><a href="#structure">Document Structure</a></li>
+                <li><a href="#examples">Practical Examples</a></li>
+                <li><a href="#insurance">Insurance Requirements</a></li>
+                <li><a href="#tips">Tips for Success</a></li>
+                <li><a href="#template">Using the Template</a></li>
+            </ul>
+        </div>
+
+        <!-- Key Principles -->
+        <h2 id="principles">Key Principles</h2>
+        <p>A well-written requirements document allows SpecTater to clearly identify required criteria and provide consistent, accurate pass/fail determinations.</p>
+
+        <h3>1. Be Specific and Measurable</h3>
+        <div class="example-box good-example">
+            <span class="icon">✅</span> <strong>Good:</strong> "Certificate must show General Liability coverage with a minimum limit of $2,000,000 per occurrence"
+        </div>
+        <div class="example-box bad-example">
+            <span class="icon">❌</span> <strong>Bad:</strong> "Need insurance coverage"
+        </div>
+        <p>The AI needs concrete values and criteria to compare against. Vague requirements lead to inconsistent evaluations.</p>
+
+        <h3>2. Use Clear Language</h3>
+        <div class="example-box good-example">
+            <span class="icon">✅</span> <strong>Good:</strong> "Certificate holder name and address must match the entity name and primary business address provided in the application"
+        </div>
+        <div class="example-box bad-example">
+            <span class="icon">❌</span> <strong>Bad:</strong> "Holder info should be correct"
+        </div>
+        <p>Explicit language helps the AI understand what constitutes compliance.</p>
+
+        <h3>3. Include Conditions and Exceptions</h3>
+        <div class="example-box good-example">
+            <span class="icon">✅</span> <strong>Good:</strong> "Workers' Compensation coverage required for all employees. Exception: Independent contractors with valid 1099 tax status are exempt"
+        </div>
+        <div class="example-box bad-example">
+            <span class="icon">❌</span> <strong>Bad:</strong> "Need workers' comp"
+        </div>
+        <p>Context helps the AI apply requirements correctly in edge cases.</p>
+
+        <h3>4. One Requirement = One Criterion</h3>
+        <p>Break complex requirements into separate items for clarity:</p>
+        <div class="example-box good-example">
+            <span class="icon">✅</span> <strong>Good:</strong>
+            <ul style="margin-bottom: 0; margin-top: 10px;">
+                <li>Requirement 1: Certificate must include Certificate Holder name</li>
+                <li>Requirement 2: Certificate must include Certificate Holder address</li>
+                <li>Requirement 3: Certificate Holder name must match entity name from application</li>
+            </ul>
+        </div>
+        <div class="example-box bad-example">
+            <span class="icon">❌</span> <strong>Bad:</strong>
+            <ul style="margin-bottom: 0; margin-top: 10px;">
+                <li>Requirement 1: Certificate holder information must be complete and correct</li>
+            </ul>
+        </div>
+
+        <!-- Document Structure -->
+        <h2 id="structure">Document Structure</h2>
+
+        <h3>Header Section</h3>
+        <p>Include context at the top to orient the AI:</p>
+        <pre><code># [Organization] Insurance Requirements Policy
+
+**Effective Date**: [Date]
+**Applicable To**: [Who must comply]
+
+## Overview
+Brief description of what this policy covers and why it exists.</code></pre>
+
+        <h3>Definitions Section (Optional but Recommended)</h3>
+        <p>Define any specialized terms or acronyms:</p>
+        <pre><code>## Definitions
+
+- **Certificate of Insurance (COI)**: Standard ACORD form 25-S(06/14) documenting active insurance coverage
+- **Additional Insured**: Party added to an insurance policy to receive coverage
+- **Per Occurrence Limit**: Maximum amount insurer pays per single incident</code></pre>
+
+        <h3>Requirements Section</h3>
+        <p>Use a numbered list format with clear hierarchy:</p>
+        <pre><code>## Insurance Requirements
+
+### 1. Certificate of Insurance Information
+
+1.1 Certificate Holder Name
+   - **Requirement**: The Certificate Holder name must match the legal entity name
+   - **Why**: Ensures the certificate is issued for the correct entity
+
+### 2. General Liability Coverage
+
+2.1 Coverage Type
+   - **Requirement**: Certificate must include General Liability (CGL) coverage
+   - **Why**: Protects against bodily injury and property damage claims</code></pre>
+
+        <!-- Practical Examples -->
+        <h2 id="examples">Practical Examples</h2>
+
+        <h3>Example 1: Certificate Holder Information</h3>
+        <div class="example-box good-example">
+            <strong>Requirement:</strong> Certificate Holder name matches the legal entity name from the contract<br><br>
+            <strong>What passes:</strong>
+            <ul style="margin-bottom: 10px;">
+                <li>Certificate Holder: ACME Contracting LLC</li>
+                <li>Contract Entity: ACME Contracting LLC</li>
+                <li>✅ PASS: Names match</li>
+            </ul>
+            <strong>What fails:</strong>
+            <ul style="margin-bottom: 0;">
+                <li>Certificate Holder: ACME Contracting, Inc.</li>
+                <li>Contract Entity: ACME Contracting LLC</li>
+                <li>❌ FAIL: Different legal entity type (Inc. vs. LLC)</li>
+            </ul>
+        </div>
+
+        <h3>Example 2: General Liability Limits</h3>
+        <div class="example-box good-example">
+            <strong>Requirement:</strong> General Liability per occurrence limit must be at least $2,000,000<br><br>
+            <strong>What passes:</strong>
+            <ul style="margin-bottom: 10px;">
+                <li>GL Per Occurrence: $2,000,000 ✅</li>
+                <li>GL Per Occurrence: $5,000,000 ✅</li>
+            </ul>
+            <strong>What fails:</strong>
+            <ul style="margin-bottom: 0;">
+                <li>GL Per Occurrence: $1,000,000 ❌</li>
+                <li>GL Per Occurrence: Not stated ❌</li>
+            </ul>
+        </div>
+
+        <h3>Example 3: Conditional Requirements</h3>
+        <div class="example-box good-example">
+            <strong>Requirement:</strong> Workers' Compensation coverage required for all employees; exempt if contractor has no employees<br><br>
+            <strong>What passes:</strong>
+            <ul style="margin-bottom: 10px;">
+                <li>Certificate shows: "Workers' Compensation - State Statutory Limits" ✅</li>
+                <li>Contractor info shows "0 employees" and no WC coverage ✅</li>
+            </ul>
+            <strong>What fails:</strong>
+            <ul style="margin-bottom: 0;">
+                <li>Certificate shows no WC AND Contractor has 5 employees ❌</li>
+            </ul>
+        </div>
+
+        <!-- Insurance Requirements -->
+        <h2 id="insurance">Insurance Requirements Checklist</h2>
+        <p>Here are typical insurance requirements you should include:</p>
+
+        <h3>Certificate Holder / Entity Information</h3>
+        <ul>
+            <li>Name (must match contract entity)</li>
+            <li>Address (must match registered business address)</li>
+            <li>Business identification</li>
+        </ul>
+
+        <h3>Insurance Company Details</h3>
+        <ul>
+            <li>Company name</li>
+            <li>AM Best rating (A- VII or better typical minimum)</li>
+            <li>License/authorization to do business in state</li>
+        </ul>
+
+        <h3>General Liability Coverage</h3>
+        <ul>
+            <li>Per Occurrence limit (e.g., $2,000,000)</li>
+            <li>General Aggregate limit (e.g., $2,000,000)</li>
+            <li>Damage to Rented Premises</li>
+            <li>Additional Insured status</li>
+        </ul>
+
+        <h3>Other Coverages (As Applicable)</h3>
+        <ul>
+            <li><strong>Umbrella/Excess Liability:</strong> If contract value is high</li>
+            <li><strong>Liquor Liability:</strong> If serving/selling alcohol</li>
+            <li><strong>Auto Liability:</strong> If using vehicles</li>
+            <li><strong>Workers' Compensation:</strong> If contractor has employees</li>
+        </ul>
+
+        <h3>Additional Endorsements</h3>
+        <ul>
+            <li>Waiver of Subrogation</li>
+            <li>Primary and Non-Contributory endorsement</li>
+            <li>Certificate of Insurance issuer contact information</li>
+        </ul>
+
+        <!-- Tips for Success -->
+        <h2 id="tips">Tips for Success</h2>
+
+        <h3>1. Avoid Ambiguous Language</h3>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>❌ Unclear</th>
+                    <th>✅ Clear</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>"Reasonable limits"</td>
+                    <td>"$2,000,000 per occurrence minimum"</td>
+                </tr>
+                <tr>
+                    <td>"Appropriate coverage"</td>
+                    <td>"$2,000,000 combined single limit"</td>
+                </tr>
+                <tr>
+                    <td>"Standard protection"</td>
+                    <td>"General Aggregate of $2,000,000"</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>2. Include Dollar Amounts</h3>
+        <p>Don't make the AI guess what's "adequate" or "sufficient." Be explicit with numbers.</p>
+
+        <h3>3. Document Exceptions Clearly</h3>
+        <p>Be explicit about when requirements don't apply:</p>
+        <div class="example-box good-example">
+            <span class="icon">✅</span> "Workers' Comp required for all employees. Exception: Independent contractors (1099 status)"
+        </div>
+
+        <h3>4. Keep Requirements Focused</h3>
+        <p><strong>Optimal:</strong> 5-50 requirements</p>
+        <ul>
+            <li>Too few (<5): Minimal value from automation</li>
+            <li>Too many (>100): AI accuracy decreases due to complexity</li>
+        </ul>
+
+        <h3>5. Version Your Requirements</h3>
+        <p>Track changes over time:</p>
+        <pre><code>Version 1.0 - Initial policy [Date]
+Version 1.1 - Added Liquor Liability requirement [Date]
+Version 1.2 - Updated General Liability limits [Date]</code></pre>
+
+        <!-- Using the Template -->
+        <h2 id="template">Using the Template</h2>
+
+        <h3>Option 1: Start with the Template</h3>
+        <p>The repository includes <code>osu-requirements-template.md</code> with insurance requirements pre-filled. You can:</p>
+        <ol>
+            <li>Download and customize the template</li>
+            <li>Fill in all <code>[TO BE FILLED: ...]</code> placeholders</li>
+            <li>Upload it to SpecTater to test</li>
+            <li>Adjust requirements based on results</li>
+        </ol>
+
+        <h3>Option 2: Use Static Requirements</h3>
+        <p>For production deployment, set <code>REQUIREMENTS='osu-requirements-template.md'</code> in your <code>.env</code> file. This:</p>
+        <ul>
+            <li>Auto-loads the policy file without user upload</li>
+            <li>Users only upload certificates to evaluate</li>
+            <li>Simplifies the user interface</li>
+        </ul>
+
+        <h3>Option 3: Create from Scratch</h3>
+        <p>Use the structure and examples above to create your own requirements document:</p>
+        <ol>
+            <li>Start with a header section</li>
+            <li>Add definitions for specialized terms</li>
+            <li>List requirements with specific criteria</li>
+            <li>Include examples of pass/fail cases</li>
+            <li>Test with sample documents</li>
+        </ol>
+
+        <h3>Testing Your Requirements</h3>
+        <p>After writing your requirements:</p>
+        <ol>
+            <li>Upload a known-good certificate</li>
+            <li>Verify results are accurate</li>
+            <li>If results are wrong, check requirement clarity</li>
+            <li>Add more specific language if needed</li>
+            <li>Repeat until satisfied</li>
+        </ol>
+
+        <h3>Troubleshooting</h3>
+        <p>If SpecTater results are inconsistent or wrong:</p>
+        <ul>
+            <li><strong>Check Specificity:</strong> Add exact dollar amounts, dates, company names</li>
+            <li><strong>Check Clarity:</strong> Avoid words like "reasonable," "adequate," "substantial"</li>
+            <li><strong>Check Completeness:</strong> Add examples of what PASS and FAIL look like</li>
+            <li><strong>Enable Debug Mode:</strong> Set <code>FLASK_DEBUG=True</code> in <code>.env</code> to see full JSON response</li>
+        </ul>
+
+        <!-- Download Template -->
+        <div class="download-section">
+            <h3 style="margin-top: 0;">Get Started Today</h3>
+            <p>Download the requirements template and customize it for your organization:</p>
+            <a href="/download/template" class="btn btn-primary" id="downloadBtn">
+                <span style="font-size: 1.2em; margin-right: 8px;">📥</span> Download Requirements Template
+            </a>
+            <p style="margin-top: 15px; font-size: 0.9em; color: var(--text-secondary);">
+                <strong>File:</strong> osu-requirements-template.md<br>
+                <strong>Size:</strong> ~18 KB | <strong>Format:</strong> Markdown (.md)<br>
+                Open in any text editor and fill in the [TO BE FILLED: ...] values
+            </p>
+        </div>
+
+        <!-- Footer Navigation -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid var(--border-color);">
+            <a href="/" class="back-btn">
+                <span>←</span> Back to Evaluator
+            </a>
+            <p style="margin-top: 20px; color: var(--text-secondary);">
+                <strong>Questions?</strong> Contact your SpecTater administrator.<br>
+                For system information, see the main README.md file.
+            </p>
+        </div>
+    </div>
+
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" class="back-to-top" title="Back to top">↑</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Dark mode toggle functionality
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const darkModeIcon = document.getElementById('darkModeIcon');
+        const body = document.body;
+
+        // Check if dark mode preference is saved in localStorage
+        const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
+        if (darkModeEnabled) {
+            body.classList.add('dark-mode');
+            darkModeIcon.textContent = '☀️';
+        }
+
+        darkModeToggle.addEventListener('click', function() {
+            body.classList.toggle('dark-mode');
+            const isEnabled = body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isEnabled);
+            darkModeIcon.textContent = isEnabled ? '☀️' : '🌙';
+        });
+
+        // Back to top button functionality
+        const backToTopBtn = document.getElementById('backToTopBtn');
+
+        // Show button when scrolling down
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+
+        // Scroll to top when button is clicked
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1015,7 +1015,64 @@ def index():
                          static_requirements=static_requirements)
 
 
+@app.route('/guide')
+def guide():
+    """Display the 'How to Write Requirements' guide"""
+    # Check subnet access restriction
+    if not check_subnet_access():
+        return """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Access Denied</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        </head>
+        <body>
+            <div class="container mt-5">
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">Access Denied</h4>
+                    <p>You are not authorized to access this application from your location.</p>
+                    <p class="mb-0">You may need to connect via VPN with split tunneling DISABLED.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """, 403
+
+    return render_template('guide.html')
+
+
+@app.route('/download/template')
+def download_template():
+    """Download the requirements template as markdown"""
+    # Check subnet access restriction
+    if not check_subnet_access():
+        abort(403)
+
+    template_path = pathlib.Path(__file__).parent / "osu-requirements-template.md"
+    if not template_path.exists():
+        abort(404)
+
+    try:
+        with open(template_path, 'r') as f:
+            content = f.read()
+
+        response = make_response(content)
+        response.headers['Content-Disposition'] = 'attachment; filename="osu-requirements-template.md"'
+        response.headers['Content-Type'] = 'text/markdown; charset=utf-8'
+        return response
+    except Exception as e:
+        logger.error(f"Error downloading template: {str(e)}")
+        abort(500)
+
+
 if __name__ == '__main__':
+    # Prevent multiprocessing issues on exit
+    import multiprocessing
+    multiprocessing.set_start_method('fork', force=True)
+
     ssl_cert = os.getenv('SSL_CERT')
     ssl_key = os.getenv('SSL_KEY')
     ssl_context = None
@@ -1029,13 +1086,19 @@ if __name__ == '__main__':
                 print(f"     Missing certificate file: {ssl_cert}")
             if not os.path.exists(os.path.expanduser(ssl_key)):
                 print(f"     Missing key file: {ssl_key}")
-    
-    app.run(
-        host='0.0.0.0',
-        port=int(os.getenv('FLASK_PORT', 5000)),
-        debug=debug_mode,
-        ssl_context=ssl_context,
-        use_reloader=False,
-        threaded=True
-    )
+
+    try:
+        app.run(
+            host='0.0.0.0',
+            port=int(os.getenv('FLASK_PORT', 5000)),
+            debug=debug_mode,
+            ssl_context=ssl_context,
+            use_reloader=False,
+            threaded=True
+        )
+    except Exception as e:
+        logger.error(f"Flask crashed with error: {e}")
+        print(f"Error: {e}")
+        import traceback
+        traceback.print_exc()
 
