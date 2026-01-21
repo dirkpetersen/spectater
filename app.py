@@ -59,14 +59,42 @@ app.config['MAX_CONTENT_LENGTH'] = get_int_env('MAX_CONTENT_LENGTH', 134217728)
 
 # Load private evaluation rules
 def load_evaluation_rules() -> dict:
-    """Load evaluation rules from private JSON file."""
+    """Load evaluation rules from private JSON file, with fallback to default."""
     rules_path = pathlib.Path(__file__).parent / "evaluation-rules.json"
+    default_rules_path = pathlib.Path(__file__).parent / "evaluation-rules.default.json"
+
+    # Try to load custom rules
     if rules_path.exists():
-        with open(rules_path, 'r') as f:
-            return json.load(f)
-    else:
-        logger.warning(f"evaluation-rules.json not found at {rules_path}. Using default rules.")
-        return {}
+        try:
+            with open(rules_path, 'r') as f:
+                logger.info(f"Loaded evaluation rules from {rules_path}")
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Error loading evaluation-rules.json: {str(e)}")
+            logger.info("Attempting to load default rules instead...")
+
+    # If custom rules don't exist or failed to load, try default
+    if default_rules_path.exists():
+        try:
+            with open(default_rules_path, 'r') as f:
+                logger.info(f"Loaded default evaluation rules from {default_rules_path}")
+                rules = json.load(f)
+
+                # Copy default rules to evaluation-rules.json for future use
+                try:
+                    with open(rules_path, 'w') as out_f:
+                        json.dump(rules, out_f, indent=2)
+                    logger.info(f"Created evaluation-rules.json from default rules at {rules_path}")
+                except Exception as e:
+                    logger.warning(f"Could not create evaluation-rules.json: {str(e)}")
+
+                return rules
+        except Exception as e:
+            logger.error(f"Error loading evaluation-rules.default.json: {str(e)}")
+
+    # If all else fails, return empty dict with warning
+    logger.warning(f"Neither evaluation-rules.json nor evaluation-rules.default.json found. Using empty rules.")
+    return {}
 
 evaluation_rules = load_evaluation_rules()
 
