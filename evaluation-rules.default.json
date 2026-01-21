@@ -1,0 +1,78 @@
+{
+  "description": "Default evaluation rules for requirements checking",
+  "version": "1.0",
+  "lastUpdated": "2026-01-20",
+  "rules": {
+    "requirementMatching": {
+      "description": "How to match requirements between policy and submission",
+      "caseSensitive": false,
+      "fuzzyMatching": true,
+      "fuzzyThreshold": 0.85
+    },
+    "valueComparison": {
+      "description": "How to compare values (amounts, dates, etc.)",
+      "currencyVariations": [
+        "$",
+        "USD",
+        "dollars",
+        "per occurrence",
+        "per claim",
+        "minimum"
+      ],
+      "numericComparisons": {
+        "enabled": true,
+        "allowPercentageDifference": 5
+      },
+      "dateFormats": [
+        "MM/DD/YYYY",
+        "MM-DD-YYYY",
+        "YYYY-MM-DD",
+        "Month DD, YYYY"
+      ]
+    },
+    "statusDetermination": {
+      "description": "How to determine overall pass/fail status",
+      "passingPercentage": 100,
+      "allowPartialMatch": true,
+      "partialMatchThreshold": 75,
+      "warningThreshold": 50
+    },
+    "exclusions": {
+      "description": "Requirements to exclude or ignore",
+      "ignoredPhrases": [
+        "optional",
+        "if applicable",
+        "where required by law"
+      ],
+      "excludeRequirements": []
+    },
+    "customRules": {
+      "description": "Custom evaluation rules for specific fields",
+      "generalLiability": {
+        "minimumLimit": 2000000,
+        "required": true,
+        "additionalInsuredRequired": true
+      },
+      "umbrella": {
+        "minimumLimit": 1000000,
+        "required": false,
+        "followsForm": true
+      },
+      "workersCompensation": {
+        "required": true,
+        "allowExemption": true,
+        "exemptionReason": "independent contractor"
+      },
+      "additionalInsured": {
+        "required": true,
+        "primaryAndNonContributory": true
+      }
+    },
+    "logging": {
+      "description": "Logging configuration for rule application",
+      "logMatches": true,
+      "logMismatches": true,
+      "logDetailLevel": "info"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-# Oregon State University Insurance Requirements Policy
+# University Insurance Requirements Policy
 
 **Effective Date**: [TO BE FILLED: Policy start date]
 **Policy Version**: 1.0
@@ -7,9 +7,9 @@
 
 ## Overview
 
-All contractors, vendors, and partners engaged by Oregon State University must maintain insurance coverage as specified in this policy. These requirements protect the University and its employees, students, and assets from liability exposure during contractual relationships.
+All contractors, vendors, and partners engaged by the University must maintain insurance coverage as specified in this policy. These requirements protect the University and its employees, students, and assets from liability exposure during contractual relationships.
 
-This policy applies to all work performed on OSU premises or involving OSU operations. Contractors must provide proof of insurance via a current Certificate of Insurance (ACORD form 25-S(06/14)) prior to commencement of work.
+This policy applies to all work performed on University premises or involving University operations. Contractors must provide proof of insurance via a current Certificate of Insurance (ACORD form 25-S(06/14)) prior to commencement of work.
 
 ---
 
@@ -126,27 +126,27 @@ This policy applies to all work performed on OSU premises or involving OSU opera
   - "Damage to Rented Premises: Not Included" ❌
   - "Damage to Rented Premises limit: $100,000" ❌ (Too low)
   - "GL coverage present but DRPE not listed" ❌
-- **Why**: Ensures OSU is protected if contractor's work causes damage to OSU facilities or rented spaces
+- **Why**: Ensures the University is protected if contractor's work causes damage to University facilities or rented spaces
 
 ---
 
 ### 4. Additional Insured Status
 
 #### 4.1 Additional Insured Endorsement
-- **Requirement**: Certificate must include **Oregon State University** (or [TO BE FILLED: exact legal entity name]) **named as Additional Insured**
+- **Requirement**: Certificate must include **[TO BE FILLED: University name]** (or [TO BE FILLED: exact legal entity name]) **named as Additional Insured**
 - **Requirement**: Additional Insured status must apply to **General Liability coverage**
 - **Examples of PASS**:
-  - "Additional Insured: Oregon State University and its officers, employees, and agents" ✅
-  - "Additional Insured (shown): Oregon State University" ✅
-  - "ACORD form box lists: Oregon State University" ✅
+  - "Additional Insured: [University Name] and its officers, employees, and agents" ✅
+  - "Additional Insured (shown): [University Name]" ✅
+  - "ACORD form box lists: [University Name]" ✅
 - **Examples of FAIL**:
   - "Additional Insured: [blank or other entities only]" ❌
   - "Additional Insured applies only to Workers' Comp, not GL" ❌
-  - "Additional Insured (shown): Some Other University" ❌
-- **Why**: Provides OSU direct protection under the contractor's liability insurance
+  - "Additional Insured (shown): Some Other Organization" ❌
+- **Why**: Provides the University direct protection under the contractor's liability insurance
 
 #### 4.2 Primary and Non-Contributory
-- **Requirement**: Additional Insured coverage must be **Primary and Non-Contributory** to OSU's own insurance
+- **Requirement**: Additional Insured coverage must be **Primary and Non-Contributory** to the University's own insurance
 - **Requirement**: This means contractor's insurance pays claims first, before OSU's insurance is accessed
 - **Examples of PASS**:
   - "Primary and Non-Contributory" notation shown on endorsement ✅
@@ -154,7 +154,7 @@ This policy applies to all work performed on OSU premises or involving OSU opera
 - **Examples of FAIL**:
   - "Secondary or Contributing" status shown ❌
   - No statement of primary/non-contributory status ❌
-- **Why**: Ensures OSU doesn't have to use its own insurance to cover contractor's liability
+- **Why**: Ensures the University doesn't have to use its own insurance to cover contractor's liability
 
 ---
 
@@ -164,7 +164,7 @@ This policy applies to all work performed on OSU premises or involving OSU opera
 - **Requirement**: **Umbrella/Excess Liability** coverage required if contract value exceeds $[TO BE FILLED: amount] or involves [TO BE FILLED: specify situations - e.g., "high-risk activities"]
 - **Requirement**: Umbrella Liability minimum limit must be $[TO BE FILLED: amount] (suggest $1,000,000)
 - **Requirement**: Umbrella must **follow form** over General Liability (includes same Additional Insured status)
-- **Requirement**: Oregon State University must be named as Additional Insured on Umbrella coverage
+- **Requirement**: [TO BE FILLED: University name] must be named as Additional Insured on Umbrella coverage
 - **Examples of PASS**:
   - "Umbrella - Per Occurrence: $1,000,000 | General Aggregate: $2,000,000" ✅
   - "Excess Liability Limit: $1,000,000 | Follows GL form | OSU is Additional Insured" ✅
@@ -180,9 +180,9 @@ This policy applies to all work performed on OSU premises or involving OSU opera
 ### 6. Liquor Liability
 
 #### 6.1 Liquor Liability Coverage (CONDITIONAL)
-- **Requirement**: Liquor Liability coverage **required IF** contractor serves, sells, provides, or distributes alcohol at any event on OSU premises or for OSU
+- **Requirement**: Liquor Liability coverage **required IF** contractor serves, sells, provides, or distributes alcohol at any event on University premises or for the University
 - **Requirement**: If required, Liquor Liability minimum limit must be $[TO BE FILLED: amount] (suggest $1,000,000 per occurrence)
-- **Requirement**: Oregon State University must be named as Additional Insured on Liquor Liability coverage
+- **Requirement**: [TO BE FILLED: University name] must be named as Additional Insured on Liquor Liability coverage
 - **Examples of PASS** (when alcohol service is involved):
   - "Liquor Liability - Per Occurrence: $1,000,000" ✅
   - "Dram Shop Liability Limit: $1,000,000 | OSU Additional Insured" ✅
@@ -200,12 +200,12 @@ This policy applies to all work performed on OSU premises or involving OSU opera
 ### 7. Commercial Auto Liability
 
 #### 7.1 Auto Liability Coverage (CONDITIONAL)
-- **Requirement**: Commercial Auto Liability coverage **required IF** contractor uses any motor vehicles for work on OSU premises or for OSU contract
+- **Requirement**: Commercial Auto Liability coverage **required IF** contractor uses any motor vehicles for work on University premises or for University contract
 - **Requirement**: If required, Auto Liability minimum limit must be:
   - **$[TO BE FILLED: amount]** combined single limit (suggest $1,000,000), OR
   - **$[TO BE FILLED] bodily injury / $[TO BE FILLED] property damage** per occurrence
-- **Requirement**: Coverage must explicitly apply to vehicles used for OSU contract work
-- **Requirement**: Oregon State University must be named as Additional Insured
+- **Requirement**: Coverage must explicitly apply to vehicles used for University contract work
+- **Requirement**: [TO BE FILLED: University name] must be named as Additional Insured
 - **Examples of PASS** (when vehicles are used):
   - "Auto Liability - Combined Single Limit: $1,000,000" ✅
   - "Auto Liability - Bodily Injury: $1,000,000 / Property Damage: $500,000" ✅
@@ -258,7 +258,7 @@ This policy applies to all work performed on OSU premises or involving OSU opera
 ### 9. Waiver of Subrogation
 
 #### 9.1 Waiver of Subrogation Endorsement
-- **Requirement**: All required coverage must include **Waiver of Subrogation** in favor of **Oregon State University**
+- **Requirement**: All required coverage must include **Waiver of Subrogation** in favor of **[TO BE FILLED: University name]**
 - **Requirement**: Waiver of Subrogation must apply to General Liability, Workers' Compensation, and any other applicable coverage
 - **Examples of PASS**:
   - "Waiver of Subrogation - In favor of Oregon State University" ✅
@@ -266,7 +266,7 @@ This policy applies to all work performed on OSU premises or involving OSU opera
 - **Examples of FAIL**:
   - "Waiver of Subrogation: None shown" ❌
   - Waiver only applies to General Liability, not Workers' Compensation ❌
-- **Why**: Prevents the insurance company from suing OSU if a claim results from the contractor's work
+- **Why**: Prevents the insurance company from suing the University if a claim results from the contractor's work
 
 ---
 
@@ -315,10 +315,10 @@ This policy applies to all work performed on OSU premises or involving OSU opera
 
 ## Policy Notes and Special Conditions
 
-### [TO BE FILLED: Add any OSU-specific notes]
+### [TO BE FILLED: Add any University-specific notes]
 
 - Example: "Additional Insured status must remain in place for 30 days after contract completion"
-- Example: "Contractors working at [specific OSU location] may have additional requirements"
+- Example: "Contractors working at [specific University location] may have additional requirements"
 - Example: "Large events (>1,000 attendees) require umbrella coverage"
 - Example: "Research-related contracts may have different requirements"
 
@@ -328,7 +328,7 @@ This policy applies to all work performed on OSU premises or involving OSU opera
 
 If a contractor has questions about these requirements or cannot obtain required coverage:
 
-1. **Contact**: [TO BE FILLED: OSU department contact name and email]
+1. **Contact**: [TO BE FILLED: University department contact name and email]
 2. **Insurance Broker**: Recommend contractor work with insurance broker to obtain compliant coverage
 3. **Exemption Process**: [TO BE FILLED: If exemptions are possible, describe process]
 
