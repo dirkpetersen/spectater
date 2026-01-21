@@ -1,0 +1,214 @@
+name: Auto-Fix Issue with Claude Code
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to process manually'
+        required: true
+        type: number
+
+jobs:
+  auto-fix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Determine issue number
+        id: issue_num
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ github.event.inputs.issue_number }}" >> $GITHUB_OUTPUT
+          else
+            echo "value=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fetch issue data
+        id: issue_data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUM=${{ steps.issue_num.outputs.value }}
+          ISSUE_JSON=$(gh api repos/${{ github.repository }}/issues/$ISSUE_NUM)
+          ISSUE_TITLE=$(echo "$ISSUE_JSON" | jq -r '.title')
+          ISSUE_BODY=$(echo "$ISSUE_JSON" | jq -r '.body')
+
+          echo "number=$ISSUE_NUM" >> $GITHUB_OUTPUT
+          echo "title=$ISSUE_TITLE" >> $GITHUB_OUTPUT
+
+          # Save body to file since it can be multiline
+          echo "$ISSUE_BODY" > /tmp/issue-body.txt
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install Claude Code
+        run: npm i -g @anthropic-ai/claude-code
+
+      - name: Configure Git
+        run: |
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name "Automated Claude Code"
+
+      - name: Create feature branch
+        run: |
+          BRANCH_NAME="fix/issue-${{ steps.issue_data.outputs.number }}"
+          git checkout -b "$BRANCH_NAME"
+          git push origin "$BRANCH_NAME"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create issue context file
+        run: |
+          ISSUE_NUM=${{ steps.issue_data.outputs.number }}
+          ISSUE_TITLE="${{ steps.issue_data.outputs.title }}"
+          ISSUE_BODY=$(cat /tmp/issue-body.txt)
+
+          mkdir -p /tmp
+          cat > /tmp/issue-context.txt <<EOF
+          Issue #$ISSUE_NUM: $ISSUE_TITLE
+
+          Description:
+          $ISSUE_BODY
+          EOF
+
+      - name: Run Claude Code to fix issue
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.BEDROCK_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BEDROCK_AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-west-2
+          CLAUDE_CODE_USE_BEDROCK: 1
+          CLAUDE_FIX_MODEL: ${{ vars.CLAUDE_FIX_MODEL || 'opus' }}
+        run: |
+          cat > /tmp/fix-prompt.md <<'PROMPT_EOF'
+          # Fix GitHub Issue
+
+          Please analyze and fix the following issue:
+
+          PROMPT_EOF
+          cat /tmp/issue-context.txt >> /tmp/fix-prompt.md
+          cat >> /tmp/fix-prompt.md <<'PROMPT_EOF'
+
+          ## Your Task
+          1. Analyze the issue
+          2. Make necessary changes to fix it (use Edit tool to modify files)
+          3. Keep changes minimal and focused
+          4. Test your changes if possible
+
+          When done, I will automatically commit and create a PR.
+          PROMPT_EOF
+
+          # Run Claude Code with stdin in fully automated mode
+          cat /tmp/fix-prompt.md | claude --dangerously-skip-permissions --model ${CLAUDE_FIX_MODEL}
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "HAS_CHANGES=false" >> $GITHUB_OUTPUT
+          else
+            echo "HAS_CHANGES=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit changes
+        if: steps.changes.outputs.HAS_CHANGES == 'true'
+        run: |
+          git add -A
+          git commit -m "fix: Resolve issue #${{ steps.issue_data.outputs.number }}"
+          git push origin "fix/issue-${{ steps.issue_data.outputs.number }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request
+        id: create_pr
+        if: steps.changes.outputs.HAS_CHANGES == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUM=${{ steps.issue_data.outputs.number }}
+          ISSUE_TITLE="${{ steps.issue_data.outputs.title }}"
+          BRANCH="fix/issue-$ISSUE_NUM"
+
+          # Create PR using gh CLI with heredoc for multiline body
+          PR_BODY=$(cat <<EOF
+          ## Automated Fix
+
+          This PR automatically addresses issue #$ISSUE_NUM.
+
+          **Issue**: $ISSUE_TITLE
+
+          Please review and merge if the fix looks good.
+
+          Fixes #$ISSUE_NUM
+          EOF
+          )
+
+          PR_URL=$(gh pr create \
+            --repo ${{ github.repository }} \
+            --head "$BRANCH" \
+            --base main \
+            --title "Fix: Resolve issue #$ISSUE_NUM" \
+            --body "$PR_BODY")
+
+          echo "Created PR: $PR_URL"
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+
+          # Comment on the issue
+          gh issue comment $ISSUE_NUM \
+            --repo ${{ github.repository }} \
+            --body "🤖 PR created with automated fix: $PR_URL - Please review!"
+
+          # Close the issue since a PR was created
+          gh issue close $ISSUE_NUM \
+            --repo ${{ github.repository }} \
+            --comment "✅ Automated fix completed. Closing this issue as PR $PR_URL has been created with the solution."
+
+      # ============================================================
+      # AUTO-MERGE FEATURE
+      # To enable auto-merge, set repository variable ISSUE_AUTO_FIX_MERGE=yes
+      # ============================================================
+      - name: Auto-merge Pull Request
+        if: steps.changes.outputs.HAS_CHANGES == 'true' && vars.ISSUE_AUTO_FIX_MERGE == 'yes'
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUM=${{ steps.issue_data.outputs.number }}
+          BRANCH="fix/issue-$ISSUE_NUM"
+
+          # Wait a moment for PR to be fully created
+          sleep 5
+
+          # Merge the PR using squash merge
+          # Change --squash to --merge or --rebase if preferred
+          gh pr merge "$BRANCH" \
+            --repo ${{ github.repository }} \
+            --squash \
+            --delete-branch \
+            --body "🤖 Auto-merged by Claude Code workflow"
+
+          echo "✅ PR merged successfully"
+      # ============================================================
+      # END AUTO-MERGE FEATURE
+      # ============================================================
+
+      - name: Comment if no changes
+        if: steps.changes.outputs.HAS_CHANGES == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumber = context.payload.issue.number;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: "⚠️ No changes were needed. The issue may already be resolved or requires manual intervention."
+            });

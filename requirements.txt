@@ -1,8 +1,8 @@
 flask>=3.1.2
-boto3>=1.40.40
+boto3>=1.42.25
 python-dotenv==1.1.1
-pymupdf4llm>=0.0.27
-pymupdf>=1.26.4
-beautifulsoup4>=4.14.2
-amazon-textract-response-parser>=0.1.49
-serverless-wsgi>=3.0.3
+pymupdf4llm>=0.2.9
+pymupdf-layout>=1.26.6
+beautifulsoup4>=4.14.3
+amazon-textract-response-parser>=1.0.3
+serverless-wsgi>=3.1.0

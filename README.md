@@ -261,3 +261,83 @@ MIT License - see LICENSE file
 - AWS account with Bedrock access
 - AWS credentials configured (via ~/.aws/credentials or environment variables)
 - For Textract: S3 and Textract permissions
+
+## AWS Permissions
+
+The application requires the following AWS IAM permissions:
+
+### Minimum Permissions (Basic Operation)
+
+For basic PDF analysis without Textract:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:*::foundation-model/anthropic.claude-*",
+        "arn:aws:bedrock:*::foundation-model/amazon.nova-*"
+      ]
+    }
+  ]
+}
+```
+
+### Full Permissions (With Textract Support)
+
+For complete functionality including table extraction from PDFs:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:*::foundation-model/anthropic.claude-*",
+        "arn:aws:bedrock:*::foundation-model/amazon.nova-*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject",
+        "s3:DeleteBucket",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::spectater-textract-*",
+        "arn:aws:s3:::spectater-textract-*/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "textract:AnalyzeDocument",
+        "textract:GetDocumentAnalysis"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+**Note:** The S3 bucket is created automatically with the naming pattern `{APP_NAME}-textract-{account_id}-{region}` and is cleaned up when the application shuts down.
