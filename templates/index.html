@@ -327,15 +327,38 @@
         }
 
         /* Drag and drop styling */
+        .upload-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+            align-items: start;
+        }
+
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .upload-section label {
+            margin-bottom: 10px;
+        }
+
         .drop-zone {
             border: 2px dashed var(--border-color);
             border-radius: 8px;
-            padding: 30px;
+            padding: 25px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
             background-color: var(--bg-primary);
-            margin-top: 10px;
+            flex-grow: 1;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .drop-zone:hover {
@@ -480,30 +503,32 @@
         {% endif %}
 
         <form method="POST" enctype="multipart/form-data" id="uploadForm">
-            {% if not static_requirements %}
-            <div class="mb-3">
-                <label for="policy" class="form-label">Upload the policy or requirements documents (PDF, TXT, or MD files)</label>
-                <input type="file" class="form-control" id="policy" name="policy" multiple accept=".pdf,.txt,.md" style="display: none;">
-                <div class="drop-zone" id="policyDropZone">
-                    <div class="drop-zone-icon">📄</div>
-                    <div class="drop-zone-text">Drag and drop files here</div>
-                    <div class="drop-zone-subtext">or click to browse</div>
+            <div class="upload-container">
+                {% if not static_requirements %}
+                <div class="upload-section">
+                    <label for="policy" class="form-label">Upload the policy or requirements documents (PDF, TXT, or MD files)</label>
+                    <input type="file" class="form-control" id="policy" name="policy" multiple accept=".pdf,.txt,.md" style="display: none;">
+                    <div class="drop-zone" id="policyDropZone">
+                        <div class="drop-zone-icon">📄</div>
+                        <div class="drop-zone-text">Drag and drop files here</div>
+                        <div class="drop-zone-subtext">or click to browse</div>
+                    </div>
+                    <div class="file-list" id="policyFileList"></div>
+                    <small class="form-text text-muted d-block mt-2" id="policyDisplay">Requirements</small>
                 </div>
-                <div class="file-list" id="policyFileList"></div>
-                <small class="form-text text-muted d-block mt-2" id="policyDisplay">Requirements</small>
-            </div>
-            {% endif %}
+                {% endif %}
 
-            <div class="mb-3">
-                <label for="submission" class="form-label">Upload the documents you'd like to verify against these requirements (PDF or MD files)</label>
-                <input type="file" class="form-control" id="submission" name="submission" required multiple accept=".pdf,.md" style="display: none;">
-                <div class="drop-zone" id="submissionDropZone">
-                    <div class="drop-zone-icon">📋</div>
-                    <div class="drop-zone-text">Drag and drop files here</div>
-                    <div class="drop-zone-subtext">or click to browse</div>
+                <div class="upload-section">
+                    <label for="submission" class="form-label">Upload the documents you'd like to verify against these requirements (PDF or MD files)</label>
+                    <input type="file" class="form-control" id="submission" name="submission" required multiple accept=".pdf,.md" style="display: none;">
+                    <div class="drop-zone" id="submissionDropZone">
+                        <div class="drop-zone-icon">📋</div>
+                        <div class="drop-zone-text">Drag and drop files here</div>
+                        <div class="drop-zone-subtext">or click to browse</div>
+                    </div>
+                    <div class="file-list" id="submissionFileList"></div>
+                    <small class="form-text text-muted d-block mt-2" id="submissionDisplay">Certificate</small>
                 </div>
-                <div class="file-list" id="submissionFileList"></div>
-                <small class="form-text text-muted d-block mt-2" id="submissionDisplay">Certificate</small>
             </div>
 
             <div class="mb-3">
