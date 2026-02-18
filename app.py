@@ -818,14 +818,19 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
         raise
 
 def check_subnet_access():
-    """Check if request is from allowed subnet"""
+    """Check if request is from allowed subnet.
+    Uses the raw WSGI REMOTE_ADDR (direct socket peer, e.g. Traefik on 127.0.0.1)
+    rather than request.remote_addr which ProxyFix resolves to the real client IP."""
     subnet_only = os.getenv('SUBNET_ONLY', '127.0.0.1/32')
     if not subnet_only:
         return True  # No restriction if empty
 
     try:
         allowed_network = ipaddress.ip_network(subnet_only, strict=False)
-        client_ip = ipaddress.ip_address(request.remote_addr)
+        # Use raw socket peer address, bypassing ProxyFix's X-Forwarded-For resolution
+        orig = request.environ.get('werkzeug.proxy_fix.orig')
+        raw_ip = orig['REMOTE_ADDR'] if orig else request.remote_addr
+        client_ip = ipaddress.ip_address(raw_ip)
 
         if client_ip not in allowed_network:
             logger.warning(f"Access denied for IP {client_ip} (allowed subnet: {subnet_only})")
