@@ -8,6 +8,7 @@ import uuid, os, tempfile, logging, json, pathlib, re, time, atexit, hashlib, ip
 from datetime import datetime, timezone, timedelta
 from typing import Tuple, List, Optional
 from flask import Flask, render_template, request, make_response, session, abort
+from werkzeug.middleware.proxy_fix import ProxyFix
 from botocore.exceptions import BotoCoreError, ClientError
 from botocore.config import Config
 import boto3
@@ -29,14 +30,15 @@ def configure_logging():
 
 debug_mode = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
 app = Flask(__name__, static_url_path='/static', static_folder='static') # or app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
-# Suppress broken pipe errors from client disconnections (harmless warnings)
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
+# Suppress noisy werkzeug logs but keep connection warnings visible
+logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
-# Suppress BrokenPipeError at the OS signal level (macOS/Linux)
+# Ignore SIGPIPE so broken pipes raise BrokenPipeError instead of killing the process
 try:
     import signal
-    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+    signal.signal(signal.SIGPIPE, signal.SIG_IGN)
 except (AttributeError, ValueError):
     pass  # Windows doesn't have SIGPIPE
 
@@ -856,6 +858,11 @@ def load_introduction():
             logger.error(f"Failed to load introduction file {intro_file}: {e}")
     return None
 
+@app.errorhandler(BrokenPipeError)
+def handle_broken_pipe(e):
+    logger.warning(f"Client disconnected (broken pipe): {e}")
+    return "", 499
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     # Check subnet access restriction
@@ -1035,7 +1042,7 @@ def index():
                                  introduction=introduction,
                                  static_requirements=static_requirements,
                                  result=result,
-                                 explanation=raw_response,
+                                 explanation=raw_response if not json_data else None,
                                  json_data=json_output,
                                  json_parsed=json_data,
                                  inconsistent_warning=inconsistent_warning,
