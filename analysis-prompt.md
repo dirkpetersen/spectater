@@ -30,8 +30,30 @@ Review the `Submission Document` and verify if it meets or exceeds ALL requireme
   - REJECT any address that is NOT one of these four specific addresses
   - Do NOT accept "any address in Bend" or "any address in Corvallis" - ONLY these four
 
+**DATE PARSING INSTRUCTIONS:**
+When comparing dates, you must parse and understand multiple date formats:
+- **Written formats**: "January 29, 2026", "Jan 29, 2026", "29 January 2026"
+- **Numeric formats**: "1/29/2026", "01/29/2026", "1-29-2026", "2026-01-29"
+- **Mixed formats**: "January 29, 2026 (1/29/2026)"
+- **CRITICAL**: When evaluating if a date falls within a policy period:
+  1. Parse BOTH the submission date AND policy dates into comparable formats
+  2. Convert written month names to numbers (January = 1, February = 2, etc.)
+  3. Compare year, then month, then day numerically
+  4. Example: "January 29, 2026" = 1/29/2026, which falls within "8/1/2025 - 8/1/2026" period (August 1, 2025 to August 1, 2026)
+  5. If a date is written in ANY format and falls within the required range, mark as PASS
+- **Do NOT fail dates simply because they're written differently** - parse and compare the actual dates
+
+**CRITICAL REQUIREMENTS - CANNOT BE PARTIAL:**
+The following requirements are CRITICAL and must be marked as FAIL if missing or incomplete (NEVER partial):
+- **Additional Insured Status**: If the submission does NOT explicitly name the required entity as "Additional Insured", mark as FAIL
+  - Notes in boxes or general statements are NOT sufficient
+  - Must explicitly state the entity name as additional insured in the proper section
+  - If completely missing or only mentioned in notes/remarks → FAIL (not partial)
+- **Required Coverage Types**: If a specific coverage type is required and completely missing → FAIL (not partial)
+- **Mandatory Signatures/Dates**: If required signature or date is missing → FAIL (not partial)
+
 **PARTIAL MATCHING INSTRUCTIONS (FOR YELLOW STATUS):**
-For certain requirements, partial compliance is acceptable and should be marked as "PARTIAL" status (YELLOW):
+For NON-CRITICAL requirements, partial compliance is acceptable and should be marked as "PARTIAL" status (YELLOW):
 - **Word/Phrase Matching (75%+ match)**: If 75% or more of the required keywords/phrases are present in the submission, mark as PARTIAL (YELLOW)
   - Example: If policy requires "trustees, officers, employees, and agents" (4 items) and submission has "trustees, officers, and agents" (3 items), that's 75% match → PARTIAL
   - Example: If policy requires "John Smith, 123 Main St, Springfield, IL 62701" and submission has "123 Main St, Springfield, IL 62701" (missing name but 3/4 elements = 75%) → PARTIAL

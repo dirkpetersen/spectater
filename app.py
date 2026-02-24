@@ -429,18 +429,28 @@ def extract_text_from_file(uploaded_file, reject_tables=False, use_textract_for_
             temp_path = tmp.name
 
             if filename.lower().endswith('.pdf'):
-                # First, try to detect if PDF is image-based by checking for any extractable text
+                # First, try to detect if PDF is image-based by checking for extractable text
+                # Use a threshold: if pages have less than 100 characters, likely scanned/image-based
                 import fitz
                 doc = fitz.open(temp_path)
                 is_image_pdf = True
                 page_count = len(doc)
+                text_threshold = 100  # Minimum characters per page to consider it text-based
 
+                total_text_length = 0
                 for page in doc:
                     text = page.get_text().strip()
-                    if text:
-                        is_image_pdf = False
-                        break
+                    total_text_length += len(text)
+
+                # If average characters per page is above threshold, consider it text-based
+                avg_chars_per_page = total_text_length / page_count if page_count > 0 else 0
+                if avg_chars_per_page >= text_threshold:
+                    is_image_pdf = False
+
                 doc.close()
+
+                if is_image_pdf:
+                    logger.info(f"Document '{filename}' appears to be scanned/image-based (avg {avg_chars_per_page:.0f} chars/page). Will use OCR.")
 
                 # If it's image-based, use Textract directly
                 if is_image_pdf and page_count > 0:
