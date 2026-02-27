@@ -727,11 +727,13 @@ def evaluate_requirements(policy_text: str, submission_text: str) -> Tuple[str, 
             print(f"[DEBUG] LLM response preview (first 100 chars): {preview}")
 
         # Extract JSON from response - find the outermost JSON object
-        # Method 1: Try with code blocks
+        # Method 1: Try with code blocks - use findall and take the LAST block
+        # (model may self-correct by emitting a second revised JSON block)
         json_str = None
-        json_match = re.search(r'```(?:json)?\s*\n?(\{[\s\S]*)\s*\n?```', text_content)
-        if json_match:
-            json_str = json_match.group(1).strip()
+        all_blocks = re.findall(r'```(?:json)?\s*\n?([\s\S]*?)\s*\n?```', text_content)
+        json_blocks = [b.strip() for b in all_blocks if b.strip().startswith('{')]
+        if json_blocks:
+            json_str = json_blocks[-1]
         else:
             # Method 2: Find JSON by counting braces to get complete structure
             start_idx = text_content.find('{')
