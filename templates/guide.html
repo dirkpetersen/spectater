@@ -204,6 +204,17 @@
             border-color: var(--osu-black);
         }
 
+        /* WCAG 2.1 AA: visible focus indicators */
+        :focus-visible {
+            outline: 3px solid var(--osu-orange);
+            outline-offset: 2px;
+        }
+
+        #darkModeToggle:focus-visible {
+            outline: 3px solid var(--osu-orange);
+            outline-offset: 3px;
+        }
+
         .toc-section {
             background-color: #f9f9f9;
             padding: 20px;
@@ -343,8 +354,8 @@
 
         <div style="position: relative;">
             <h1>How to Write Requirements Documents</h1>
-            <button id="darkModeToggle" class="btn btn-outline-secondary dark-mode-toggle" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                <span id="darkModeIcon">🌙</span>
+            <button id="darkModeToggle" class="btn btn-outline-secondary dark-mode-toggle" aria-label="Switch to dark mode" aria-pressed="false" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                <span id="darkModeIcon" aria-hidden="true">🌙</span>
             </button>
         </div>
 
@@ -715,18 +726,24 @@ Version 1.2 - Updated General Liability limits [Date]</code></pre>
         const darkModeIcon = document.getElementById('darkModeIcon');
         const body = document.body;
 
+        function updateDarkModeToggle(isEnabled) {
+            darkModeIcon.textContent = isEnabled ? '☀️' : '🌙';
+            darkModeToggle.setAttribute('aria-pressed', isEnabled ? 'true' : 'false');
+            darkModeToggle.setAttribute('aria-label', isEnabled ? 'Switch to light mode' : 'Switch to dark mode');
+        }
+
         // Check if dark mode preference is saved in localStorage
         const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
         if (darkModeEnabled) {
             body.classList.add('dark-mode');
-            darkModeIcon.textContent = '☀️';
         }
+        updateDarkModeToggle(darkModeEnabled);
 
         darkModeToggle.addEventListener('click', function() {
             body.classList.toggle('dark-mode');
             const isEnabled = body.classList.contains('dark-mode');
             localStorage.setItem('darkMode', isEnabled);
-            darkModeIcon.textContent = isEnabled ? '☀️' : '🌙';
+            updateDarkModeToggle(isEnabled);
         });
 
         // Back to top button functionality
