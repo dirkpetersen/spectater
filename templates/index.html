@@ -11,14 +11,31 @@
             padding: 20px;
             border-radius: 5px;
             margin: 20px 0;
-            font-size: 24px;
+            font-size: 1.5rem;
             font-weight: bold;
             text-align: center;
         }
         .green { background-color: #d4edda; color: #155724; }
-        .yellow { background-color: #fff3cd; color: #856404; }
-        .orange { background-color: #ffe5d0; color: #ad4f09; }
+        .yellow { background-color: #fff3cd; color: #664d03; }  /* darkened for 7.3:1 contrast */
+        .orange { background-color: #ffe5d0; color: #8a3f07; }  /* darkened for 6.2:1 contrast */
         .red { background-color: #f8d7da; color: #721c24; }
+
+        /* WCAG 2.1 AA: visible focus indicators */
+        :focus-visible {
+            outline: 3px solid var(--osu-orange);
+            outline-offset: 2px;
+        }
+
+        .drop-zone:focus-visible {
+            outline: 3px solid var(--osu-orange);
+            outline-offset: 2px;
+            border-color: var(--osu-orange);
+        }
+
+        #darkModeToggle:focus-visible {
+            outline: 3px solid var(--osu-orange);
+            outline-offset: 3px;
+        }
 
         body.dark-mode .result-box.green {
             background-color: #1a4d3c;
@@ -354,7 +371,7 @@
             transition: all 0.3s ease;
             background-color: var(--bg-primary);
             flex-grow: 1;
-            min-height: 200px;
+            min-height: 12.5rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -475,22 +492,26 @@
     </style>
 </head>
 <body>
+    <a href="#main-content" class="visually-hidden-focusable">Skip to main content</a>
     <!-- Full-screen loading overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner-border" role="status">
+    <div class="loading-overlay" id="loadingOverlay" role="status" aria-live="polite" aria-atomic="true" aria-label="Processing documents" aria-hidden="true">
+        <div class="spinner-border" aria-hidden="true">
             <span class="visually-hidden">Loading...</span>
         </div>
         <div class="loading-text" id="processingStage">Uploading documents...</div>
         <div class="loading-subtext">Please wait while we analyze your documents</div>
     </div>
 
+    <main id="main-content">
     <div class="container mt-5">
+        <header>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h1 class="mb-0">{{ title if title else 'Policy / Requirements Evaluator' }}</h1>
-            <button id="darkModeToggle" class="btn btn-outline-secondary" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                <span id="darkModeIcon">🌙</span>
+            <button id="darkModeToggle" class="btn btn-outline-secondary" aria-label="Switch to dark mode" aria-pressed="false" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                <span id="darkModeIcon" aria-hidden="true">🌙</span>
             </button>
         </div>
+        </header>
 
         {% if introduction %}
         <div class="alert alert-info">
@@ -508,8 +529,8 @@
                 <div class="upload-section">
                     <label for="policy" class="form-label">Upload the policy or requirements documents (PDF, TXT, or MD files)</label>
                     <input type="file" class="form-control" id="policy" name="policy" multiple accept=".pdf,.txt,.md" style="display: none;">
-                    <div class="drop-zone" id="policyDropZone">
-                        <div class="drop-zone-icon">📄</div>
+                    <div class="drop-zone" id="policyDropZone" role="button" tabindex="0" aria-label="Upload policy or requirements documents. Drag and drop files here or press Enter to browse.">
+                        <div class="drop-zone-icon" aria-hidden="true">📄</div>
                         <div class="drop-zone-text">Drag and drop files here</div>
                         <div class="drop-zone-subtext">or click to browse</div>
                     </div>
@@ -521,8 +542,8 @@
                 <div class="upload-section">
                     <label for="submission" class="form-label">Upload the documents you'd like to verify against these requirements (PDF or MD files)</label>
                     <input type="file" class="form-control" id="submission" name="submission" required multiple accept=".pdf,.md" style="display: none;">
-                    <div class="drop-zone" id="submissionDropZone">
-                        <div class="drop-zone-icon">📋</div>
+                    <div class="drop-zone" id="submissionDropZone" role="button" tabindex="0" aria-label="Upload submission documents to verify. Drag and drop files here or press Enter to browse.">
+                        <div class="drop-zone-icon" aria-hidden="true">📋</div>
                         <div class="drop-zone-text">Drag and drop files here</div>
                         <div class="drop-zone-subtext">or click to browse</div>
                     </div>
@@ -550,7 +571,7 @@
             <strong>Document Analyzed:</strong> <span id="fileNameDisplay">{{ submission_filename }}</span>
         </div>
 
-        <div class="result-box {{ result.lower() }}">
+        <div class="result-box {{ result.lower() }}" role="status" aria-live="polite" aria-label="Evaluation result: {% if result == 'GREEN' %}All requirements fully met{% elif result == 'YELLOW' %}Most requirements met with partial compliance{% elif result == 'ORANGE' %}Requirements are ambiguous and need clarification{% elif result == 'RED' %}One or more requirements not met{% endif %}">
             {% if result == "GREEN" %}
                 {{ result }}: all requirements are fully met
             {% elif result == "YELLOW" %}
@@ -571,7 +592,7 @@
         {% if json_parsed %}
         <div class="card mt-3">
             <div class="card-body">
-                <h5 class="card-title">Detailed Results</h5>
+                <h2 class="card-title" style="font-size: 1.25rem;">Detailed Results</h2>
                 <div class="mb-3">
                     <strong>Summary:</strong> {{ json_parsed.summary.statement }}<br>
                     <strong>Total Checks:</strong> {{ json_parsed.summary.totalChecks }} |
@@ -615,7 +636,7 @@
         {% if json_data %}
         <div class="card mt-3">
             <div class="card-body">
-                <h5 class="card-title">Raw JSON Output <small class="text-muted">(model: {{ model_id }})</small></h5>
+                <h3 class="card-title" style="font-size: 1.1rem;">Raw JSON Output <small class="text-muted">(model: {{ model_id }})</small></h3>
                 <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"><code>{{ json_data }}</code></pre>
             </div>
         </div>
@@ -632,7 +653,8 @@
         {% endif %}
         {% endif %}
     </div>
-    
+    </main>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const form = document.querySelector('form');
@@ -695,6 +717,14 @@
             // Click to browse
             dropZone.addEventListener('click', () => fileInput.click());
 
+            // Keyboard activation (Enter/Space) for accessibility
+            dropZone.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    fileInput.click();
+                }
+            });
+
             // Update file list display when files change
             fileInput.addEventListener('change', function() {
                 updateFileList(fileList, this.files, fileInputId);
@@ -738,6 +768,7 @@
                 removeBtn.type = 'button';
                 removeBtn.className = 'file-item-remove';
                 removeBtn.textContent = '✕';
+                removeBtn.setAttribute('aria-label', 'Remove ' + file.name);
                 removeBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     removeFile(inputId, index);
@@ -824,6 +855,7 @@
 
             hideResults();
             loadingOverlay.classList.add('active');
+            loadingOverlay.removeAttribute('aria-hidden');
 
             // More detailed progress stages that change frequently
             const stages = [
@@ -868,14 +900,22 @@
             policyInput.addEventListener('change', hideResults);
         }
 
-        // Display uploaded file name on page load
+        // Display uploaded file name on page load, and focus results if present
         window.addEventListener('load', function() {
             const fileNames = submissionInput.files.length > 0
                 ? Array.from(submissionInput.files).map(f => f.name).join(', ')
                 : (submissionDisplay.textContent !== 'Certificate' ? submissionDisplay.textContent : '');
 
             if (fileNames) {
-                document.getElementById('fileNameDisplay').textContent = fileNames;
+                const display = document.getElementById('fileNameDisplay');
+                if (display) display.textContent = fileNames;
+            }
+
+            // Move focus to results after page reload with evaluation output
+            const resultBox = document.querySelector('.result-box');
+            if (resultBox) {
+                resultBox.setAttribute('tabindex', '-1');
+                resultBox.focus();
             }
         });
 
@@ -884,18 +924,24 @@
         const darkModeIcon = document.getElementById('darkModeIcon');
         const body = document.body;
 
+        function updateDarkModeToggle(isEnabled) {
+            darkModeIcon.textContent = isEnabled ? '☀️' : '🌙';
+            darkModeToggle.setAttribute('aria-pressed', isEnabled ? 'true' : 'false');
+            darkModeToggle.setAttribute('aria-label', isEnabled ? 'Switch to light mode' : 'Switch to dark mode');
+        }
+
         // Check if dark mode preference is saved in localStorage
         const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
         if (darkModeEnabled) {
             body.classList.add('dark-mode');
-            darkModeIcon.textContent = '☀️';
         }
+        updateDarkModeToggle(darkModeEnabled);
 
         darkModeToggle.addEventListener('click', function() {
             body.classList.toggle('dark-mode');
             const isEnabled = body.classList.contains('dark-mode');
             localStorage.setItem('darkMode', isEnabled);
-            darkModeIcon.textContent = isEnabled ? '☀️' : '🌙';
+            updateDarkModeToggle(isEnabled);
         });
     </script>
 </body>
