@@ -115,7 +115,7 @@ jobs:
           PROMPT_EOF
 
           # Run Claude Code - no approval prompts, all tools available for legitimate fixes
-          cat /tmp/fix-prompt.md | claude --permission-mode bypassPermissions \
+          cat /tmp/fix-prompt.md | claude --permission-mode acceptEdits \
             --model ${CLAUDE_FIX_MODEL}
 
       - name: Check for changes
